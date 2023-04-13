@@ -49,7 +49,7 @@ object JsonExpr:
       case Pattern.Arr(value*) => '{ JsonArray(${Varargs(value.map(toJsonExpr(_, args)))}*) }
       case Pattern.Obj(nameValues*) =>
         val nameValueExprs = for (name, value) <- nameValues yield '{ (${Expr(name)}, ${toJsonExpr(value, args)}) }
-        '{ JsonObject(Map(${Varargs(nameValueExprs)}*)) }
+        '{ JsonObject(${Varargs(nameValueExprs)}*) }
       case Pattern.InterpolatedValue => args.next()
 
   private given ToExpr[Pattern] with

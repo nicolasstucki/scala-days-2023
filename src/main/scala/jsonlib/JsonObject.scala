@@ -18,4 +18,9 @@ final class JsonObject(private[jsonlib] val nameValues: Map[String, Json]) exten
     nameValues.hashCode()
 
 object JsonObject:
-   object Undefined
+
+  object Undefined
+
+  def apply(keyValues: (String, Json)*): JsonObject =
+    // TODO check that keys are unique?
+    new JsonObject(Map(keyValues*))

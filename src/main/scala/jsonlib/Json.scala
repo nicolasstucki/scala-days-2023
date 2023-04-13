@@ -23,6 +23,6 @@ object Json:
       case Pattern.Arr(values*) => JsonArray(values.map(fromPattern)*)
       case Pattern.Obj(nameValues*) =>
         val nameJsons = for (name, value) <- nameValues yield (name, fromPattern(value))
-        JsonObject(Map(nameJsons*))
+        JsonObject(nameJsons*)
       case Pattern.InterpolatedValue =>
         assert(false, "unexpected Pattern containing interpolated values: " + ast)
