@@ -1,4 +1,4 @@
-import jsonlib.*
+package jsonlib
 
 class TestsComplexValue extends munit.FunSuite {
 

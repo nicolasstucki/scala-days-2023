@@ -9,7 +9,7 @@ import jsonlib.util.*
 private enum Schema:
   case Value
   case Obj(nameSchemas: (String, Schema)*)
-  case Arr
+  case Arr(elemSchema: Schema)
   case Str
   case Num
   case Bool
@@ -28,7 +28,9 @@ private object Schema:
         nameSchemas.foldLeft(TypeRepr.of[JsonObject]) { case (acc, (name, schema)) =>
           Refinement(acc, name, TypeRepr.of(using refinedType(schema)))
         }.asType
-      case Schema.Arr => Type.of[JsonArray]
+      case Schema.Arr(elemSchema) =>
+        refinedType(elemSchema) match
+          case '[t] => Type.of[JsonArray { def apply(idx: Int): t } ]
       case Schema.Str => Type.of[String]
       case Schema.Num => Type.of[Double]
       case Schema.Bool => Type.of[Boolean]
@@ -37,9 +39,17 @@ private object Schema:
   private def schema(pattern: Pattern, args: Iterator[Expr[Json]])(using Quotes): Schema =
     pattern match
       case Pattern.Obj(nameValues*) =>
-        val nameSchemas = for (name, value) <- nameValues yield (name, schema(value, args))
+        val nameSchemas: Seq[(String, Schema)] =
+          for (name, value) <- nameValues
+          yield (name, schema(value, args))
         Schema.Obj(nameSchemas*)
-      case Pattern.Arr(_*) => Schema.Arr
+      case Pattern.Arr() => Schema.Arr(Schema.Value)
+      case Pattern.Arr(patterns*) =>
+        val elementSchema: Schema =
+          patterns
+            .map(pattern => schema(pattern, args))
+            .reduce(intersection)
+        Schema.Arr(elementSchema)
       case Pattern.Str(_) => Schema.Str
       case Pattern.Num(_) => Schema.Num
       case Pattern.Bool(_) => Schema.Bool
@@ -54,7 +64,7 @@ private object Schema:
       case '[Boolean] => Schema.Bool
       case '[String] => Schema.Str
       case '[Double] => Schema.Num
-      case '[JsonArray] => Schema.Arr
+      case '[JsonArray] => Schema.Arr(Schema.Value) // TODO refine element type
       case '[JsonObject] =>
         import quotes.reflect.*
         def refinements(tpe: TypeRepr): Vector[(String, Schema)] =
@@ -65,4 +75,22 @@ private object Schema:
               refinements(parent) :+ (name, refinedSchema)
             case _ => Vector()
         Schema.Obj(refinements(TypeRepr.of[T].widenTermRefByName)*)
+      case _ => Schema.Value
+
+  def intersection(schema1: Schema, schema2: Schema): Schema =
+    (schema1, schema2) match
+      case (Schema.Num, Schema.Num) => Schema.Num
+      case (Schema.Str, Schema.Str) => Schema.Str
+      case (Schema.Bool, Schema.Bool) => Schema.Bool
+      case (Schema.Null, Schema.Null) => Schema.Null
+      case (Schema.Arr(elemSchema1), Schema.Arr(elemSchema2)) =>
+        Schema.Arr(intersection(elemSchema1, elemSchema2))
+      case (Schema.Obj(nameSchemas1*), Schema.Obj(nameSchemas2*)) =>
+        val nameSchemas =
+          for
+            (name1, valueSchema1) <- nameSchemas1
+            (name2, valueSchema2) <- nameSchemas2
+            if name1 == name2
+          yield (name1, intersection(valueSchema1, valueSchema2))
+        Schema.Obj(nameSchemas*)
       case _ => Schema.Value

@@ -1,4 +1,5 @@
-import jsonlib.*
+package jsonlib
+
 import scala.compiletime.testing.*
 
 class ParseFailures extends munit.FunSuite {

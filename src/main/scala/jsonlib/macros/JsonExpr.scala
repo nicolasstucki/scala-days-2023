@@ -9,16 +9,16 @@ import scala.quoted.runtime.Patterns.patternType
 
 object JsonExpr:
   /*private[jsonlib]*/ def jsonExpr(jsonStringContext: Expr[JsonStringContext], argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
-    val json = parsed(jsonStringContext)
-    val argExprs = argsExpr match
+    val json: Pattern = parsed(jsonStringContext)
+    val argExprs: Seq[Expr[Json]] = argsExpr match
       case Varargs(argExprs) => argExprs
       case _ => quotes.reflect.report.errorAndAbort("Unpacking StringContext.json args* is not supported")
-    val jsonExpr = toJsonExpr(json, argExprs.iterator)
+    val jsonExpr: Expr[Json] = toJsonExpr(json, argExprs.iterator)
     Schema.refinedType(json, argExprs) match
       case '[t] => '{ $jsonExpr.asInstanceOf[t & Json] }
 
   def jsonUnapplySeqExpr(jsonStringContext: Expr[JsonStringContext], scrutinee: Expr[Json])(using Quotes): Expr[Option[Seq[Json]]] =
-    val jsonPattern = parsed(jsonStringContext)
+    val jsonPattern: Pattern = parsed(jsonStringContext)
     // Exercise: partially evaluate the pattern matching
     '{ ${Expr(jsonPattern)}.unapplySeq($scrutinee) }
 

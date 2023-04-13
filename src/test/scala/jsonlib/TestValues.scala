@@ -1,4 +1,4 @@
-import jsonlib.*
+package jsonlib
 
 class TestsValues extends munit.FunSuite {
 
@@ -56,12 +56,13 @@ class TestsValues extends munit.FunSuite {
 
   test("array values") {
     assertEquals(json"[]", JsonArray())
-    assertEquals(json"[true]", JsonArray(true))
-    assertEquals(json"[true, null]", JsonArray(true, null))
-    assertEquals(json"[[[]]]", JsonArray(JsonArray(JsonArray())))
+    assertEquals(json"[true]": JsonArray, JsonArray(true))
+    assertEquals(json"[true, null]": JsonArray, JsonArray(true, null))
+    assertEquals(json"[[[]]]": JsonArray, JsonArray(JsonArray(JsonArray())))
+    assertEquals(json"[true]"(0): Boolean, true)
 
     assertEquals(json"${json"[]"}", JsonArray())
-    assertEquals(json"[${json"[]"}]", JsonArray(JsonArray()))
+    assertEquals(json"[${json"[]"}]": JsonArray, JsonArray(JsonArray()))
   }
 
   test("object values") {
