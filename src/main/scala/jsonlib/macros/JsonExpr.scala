@@ -33,7 +33,7 @@ object JsonExpr:
               import quotes.reflect.*
               val baseOffset = args(location.partIndex).asTerm.pos.start
               val pos = Position(jsonStringContext.asTerm.pos.sourceFile, baseOffset + location.offset, baseOffset + location.offset)
-              report.errorAndAbort(msg + s"(${location.partIndex}, ${location.offset})", pos)
+              report.errorAndAbort(msg, pos)
             sc match
               case '{ new scala.StringContext(${Varargs(args)}: _*) } => error(args)
               case '{     scala.StringContext(${Varargs(args)}: _*) } => error(args)

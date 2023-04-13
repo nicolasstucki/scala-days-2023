@@ -6,4 +6,5 @@ package parser
  *  @param partIndex index of the string in `StringContext.parts`
  *  @param offset character index in the `StringContext` part
  */
-private[jsonlib] class Location(val partIndex: Int, val offset: Int)
+private[jsonlib] class Location(val partIndex: Int, val offset: Int):
+  override def toString(): String = s"Location($partIndex, $offset)"

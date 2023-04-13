@@ -57,14 +57,3 @@ import jsonlib.*
     case json"""{ "user": $x, "a": true }""" => println("case 1: " + x)
     case json"""{ "user": $x, "active": $y }""" => println("case 2: " + (x, y))
     case _ =>
-
-  // json"n u l l"
-  // json"""n u l l"""
-  // json"a"
-  // json"a${n}"
-  // json"[${n}a ${n}"
-  // json"[${n},a ${n}"
-  // json"[${n} ${n}"
-  // json"[${n} ${n},"
-  // json"[true, "
-  // json"[true, ,"
