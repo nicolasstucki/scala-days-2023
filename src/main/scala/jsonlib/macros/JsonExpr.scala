@@ -12,15 +12,15 @@ object JsonExpr:
     val json = parsed(jsonStringContext)
     val argExprs = argsExpr match
       case Varargs(argExprs) => argExprs
-      case _ => quotes.reflect.report.errorAndAbort("Unpacking StringContext.json args is not supported")
+      case _ => quotes.reflect.report.errorAndAbort("Unpacking StringContext.json args* is not supported")
     val jsonExpr = toJsonExpr(json, argExprs.iterator)
     Schema.refinedType(json, argExprs) match
       case '[t] => '{ $jsonExpr.asInstanceOf[t & Json] }
 
   def jsonUnapplySeqExpr(jsonStringContext: Expr[JsonStringContext], scrutinee: Expr[Json])(using Quotes): Expr[Option[Seq[Json]]] =
-    val json = parsed(jsonStringContext)
+    val jsonPattern = parsed(jsonStringContext)
     // Exercise: partially evaluate the pattern matching
-    '{ ${Expr(json)}.unapplySeq($scrutinee) }
+    '{ ${Expr(jsonPattern)}.unapplySeq($scrutinee) }
 
   private def parsed(jsonStringContext: Expr[JsonStringContext])(using Quotes): Pattern =
     jsonStringContext match
@@ -46,9 +46,13 @@ object JsonExpr:
       case Pattern.Bool(value) => Expr(value)
       case Pattern.Num(value) => Expr(value)
       case Pattern.Str(value) => Expr(value)
-      case Pattern.Arr(value*) => '{ JsonArray(${Varargs(value.map(toJsonExpr(_, args)))}*) }
+      case Pattern.Arr(values*) =>
+        val valueExprs = values.map(value => toJsonExpr(value, args))
+        '{ JsonArray(${Varargs(valueExprs)}*) }
       case Pattern.Obj(nameValues*) =>
-        val nameValueExprs = for (name, value) <- nameValues yield '{ (${Expr(name)}, ${toJsonExpr(value, args)}) }
+        val nameValueExprs =
+          for (name, value) <- nameValues
+          yield Expr.ofTuple(Expr(name), toJsonExpr(value, args))
         '{ JsonObject(${Varargs(nameValueExprs)}*) }
       case Pattern.InterpolatedValue => args.next()
 

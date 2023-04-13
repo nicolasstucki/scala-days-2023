@@ -3,7 +3,7 @@ package jsonlib
 import jsonlib.macros.JsonExpr.{jsonExpr, jsonUnapplySeqExpr}
 
 extension (stringContext: scala.StringContext)
-  @annotation.compileTimeOnly("Json.json should have been removed by macro")
+  @annotation.compileTimeOnly("Json.json should no be called directly. Use json\"...\" string interpolation.")
   def json: JsonStringContext = ???
 
 type JsonStringContext
