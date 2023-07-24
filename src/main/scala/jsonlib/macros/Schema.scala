@@ -56,6 +56,9 @@ private object Schema:
       case Pattern.Num(_) => Schema.Num
       case Pattern.Bool(_) => Schema.Bool
       case Pattern.Null => Schema.Null
+      // Version 1: Only take into account the pattern
+      //  case Pattern.InterpolatedValue => Schema.Value
+      // Version 2: Take into account the statically known type of the interpolated value
       case Pattern.InterpolatedValue =>
         args.next() match
           case '{ type t <: Json; $x : `t` } => schemaOf[t]
