@@ -27,9 +27,13 @@ private object Schema:
       case Schema.Value => Type.of[Json]
       case Schema.Obj(nameSchemas*) =>
         import quotes.reflect.*
-        nameSchemas.foldLeft(TypeRepr.of[JsonObject]) { case (acc, (name, schema)) =>
+        val refined = nameSchemas.foldLeft(TypeRepr.of[JsonObject]) { case (acc, (name, schema)) =>
           Refinement(acc, name, TypeRepr.of(using refinedType(schema)))
-        }.asType.asInstanceOf[Type[? <: JsonObject]]
+        }
+        refined.asType.asInstanceOf[Type[? <: JsonObject]]
+        // With SIP-53:
+        // refined.asType match
+        //   case '[type t <: JsonObject; t] => Type.of[t]
       case Schema.Arr(elemSchema) =>
         refinedType(elemSchema) match
           case '[t] => Type.of[ JsonArray { def apply(idx: Int): t } ]
