@@ -58,9 +58,9 @@ private object Schema:
       case Pattern.Null => Schema.Null
       case Pattern.InterpolatedValue =>
         args.next() match
-          case '{ $x : t } => schemaOf[t]
+          case '{ type t <: Json; $x : `t` } => schemaOf[t]
 
-  private def schemaOf[T : Type](using Quotes): Schema =
+  private def schemaOf[T <: Json](using Type[T])(using Quotes): Schema =
     Type.of[T] match
       case '[Null] => Schema.Null
       case '[Boolean] => Schema.Bool
@@ -72,8 +72,10 @@ private object Schema:
         def refinements(tpe: TypeRepr): Vector[(String, Schema)] =
           tpe match
             case Refinement(parent, name, info) =>
-              val  refinedSchema = info.asType match
-                case '[t] => schemaOf[t]
+              val  refinedSchema = schemaOf(using info.asType.asInstanceOf[Type[? <: Json]])
+              // With SIP-53:
+              // val  refinedSchema = info.asType match
+              //   case '[type t <: Json; t] => schemaOf[t]
               refinements(parent) :+ (name, refinedSchema)
             case _ => Vector()
         Schema.Obj(refinements(TypeRepr.of[T].widenTermRefByName)*)
