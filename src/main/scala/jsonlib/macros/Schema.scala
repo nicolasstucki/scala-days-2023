@@ -17,20 +17,20 @@ private enum Schema:
 
 private object Schema:
 
-  def refinedType(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Type[?] =
+  def refinedType(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Type[? <: Json] =
     refinedType(schema(pattern, args.iterator))
 
-  private def refinedType(schema: Schema)(using Quotes): Type[?] =
+  private def refinedType(schema: Schema)(using Quotes): Type[? <: Json] =
     schema match
       case Schema.Value => Type.of[Json]
       case Schema.Obj(nameSchemas*) =>
         import quotes.reflect.*
         nameSchemas.foldLeft(TypeRepr.of[JsonObject]) { case (acc, (name, schema)) =>
           Refinement(acc, name, TypeRepr.of(using refinedType(schema)))
-        }.asType
+        }.asType.asInstanceOf[Type[? <: JsonObject]]
       case Schema.Arr(elemSchema) =>
         refinedType(elemSchema) match
-          case '[t] => Type.of[JsonArray { def apply(idx: Int): t } ]
+          case '[t] => Type.of[ JsonArray { def apply(idx: Int): t } ]
       case Schema.Str => Type.of[String]
       case Schema.Num => Type.of[Double]
       case Schema.Bool => Type.of[Boolean]
