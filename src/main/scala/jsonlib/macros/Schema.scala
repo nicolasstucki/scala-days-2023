@@ -14,6 +14,8 @@ private enum Schema:
   case Num
   case Bool
   case Null
+  // exercise: add Schema.Or to make union more precise
+    //   case Or(schema1: Schema, schema2: Schema)
 
 private object Schema:
 
