@@ -48,7 +48,7 @@ private object Schema:
         val elementSchema: Schema =
           patterns
             .map(pattern => schema(pattern, args))
-            .reduce(intersection)
+            .reduce(union)
         Schema.Arr(elementSchema)
       case Pattern.Str(_) => Schema.Str
       case Pattern.Num(_) => Schema.Num
@@ -77,20 +77,20 @@ private object Schema:
         Schema.Obj(refinements(TypeRepr.of[T].widenTermRefByName)*)
       case _ => Schema.Value
 
-  def intersection(schema1: Schema, schema2: Schema): Schema =
+  def union(schema1: Schema, schema2: Schema): Schema =
     (schema1, schema2) match
       case (Schema.Num, Schema.Num) => Schema.Num
       case (Schema.Str, Schema.Str) => Schema.Str
       case (Schema.Bool, Schema.Bool) => Schema.Bool
       case (Schema.Null, Schema.Null) => Schema.Null
       case (Schema.Arr(elemSchema1), Schema.Arr(elemSchema2)) =>
-        Schema.Arr(intersection(elemSchema1, elemSchema2))
+        Schema.Arr(union(elemSchema1, elemSchema2))
       case (Schema.Obj(nameSchemas1*), Schema.Obj(nameSchemas2*)) =>
         val nameSchemas =
           for
             (name1, valueSchema1) <- nameSchemas1
             (name2, valueSchema2) <- nameSchemas2
             if name1 == name2
-          yield (name1, intersection(valueSchema1, valueSchema2))
+          yield (name1, union(valueSchema1, valueSchema2))
         Schema.Obj(nameSchemas*)
       case _ => Schema.Value
