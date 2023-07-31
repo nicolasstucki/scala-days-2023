@@ -8,8 +8,12 @@ import jsonlib.util.*
 import scala.quoted.runtime.Patterns.patternType
 
 private[jsonlib] object JsonExpr:
+
   def jsonExpr(jsonStringContext: Expr[JsonStringContext], argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
-    val json: Pattern = parsed(jsonStringContext)
+    val json: Pattern =
+      jsonStringContext match
+        case '{ jsonlib.json($stringContext) } => parsed(stringContext)
+        case _ => quotes.reflect.report.errorAndAbort("Expected call to extension method `json(StringContext): JsonStringContext`")
     val argExprs: Seq[Expr[Json]] = argsExpr match
       case Varargs(argExprs) => argExprs
       case _ => quotes.reflect.report.errorAndAbort("Unpacking StringContext.json args* is not supported")
@@ -18,27 +22,28 @@ private[jsonlib] object JsonExpr:
       case '[t] => '{ $jsonExpr.asInstanceOf[t] }.asExprOf[Json]
 
   def jsonUnapplySeqExpr(jsonStringContext: Expr[JsonStringContext], scrutinee: Expr[Json])(using Quotes): Expr[Option[Seq[Json]]] =
-    val jsonPattern: Pattern = parsed(jsonStringContext)
-    // Exercise: partially evaluate the pattern matching
-    '{ ${Expr(jsonPattern)}.unapplySeq($scrutinee) }
-
-  private def parsed(jsonStringContext: Expr[JsonStringContext])(using Quotes): Pattern =
     jsonStringContext match
-      case '{ jsonlib.json($sc) } =>
-        val jsonString = sc.valueOrAbort.parts.map(scala.StringContext.processEscapes)
-        Parser(jsonString).parse() match
-          case Success(json) => json
-          case Error(ParseError(msg, location)) =>
-            def error(args: Seq[Expr[String]]) =
-              import quotes.reflect.*
-              val baseOffset = args(location.partIndex).asTerm.pos.start
-              val pos = Position(jsonStringContext.asTerm.pos.sourceFile, baseOffset + location.offset, baseOffset + location.offset)
-              report.errorAndAbort(msg, pos)
-            sc match
-              case '{ new scala.StringContext(${Varargs(args)}: _*) } => error(args)
-              case '{     scala.StringContext(${Varargs(args)}: _*) } => error(args)
-              case _ =>
-                quotes.reflect.report.errorAndAbort("string context is not known statically")
+      case '{ jsonlib.json($stringContext) } =>
+        val jsonPattern: Pattern = parsed(stringContext)
+        // Exercise: partially evaluate the pattern matching
+        '{ ${Expr(jsonPattern)}.unapplySeq($scrutinee) }
+      case _ => quotes.reflect.report.errorAndAbort("Expected call to extension method `json(StringContext): JsonStringContext`")
+
+  private def parsed(stringContext: Expr[StringContext])(using Quotes): Pattern =
+    val jsonString = stringContext.valueOrAbort.parts.map(scala.StringContext.processEscapes)
+    Parser(jsonString).parse() match
+      case Success(json) => json
+      case Error(ParseError(msg, location)) =>
+        def error(args: Seq[Expr[String]]) =
+          import quotes.reflect.*
+          val baseOffset = args(location.partIndex).asTerm.pos.start
+          val pos = Position(stringContext.asTerm.pos.sourceFile, baseOffset + location.offset, baseOffset + location.offset)
+          report.errorAndAbort(msg, pos)
+        stringContext match
+          case '{ new scala.StringContext(${Varargs(args)}: _*) } => error(args)
+          case '{     scala.StringContext(${Varargs(args)}: _*) } => error(args)
+          case _ =>
+            quotes.reflect.report.errorAndAbort("string context is not known statically")
 
   private def toJsonExpr(ast: Pattern, args: Iterator[Expr[Json]])(using Quotes): Expr[Json] =
     ast match
