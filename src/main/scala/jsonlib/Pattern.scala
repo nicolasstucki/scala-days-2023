@@ -33,7 +33,7 @@ enum Pattern:
             optional:
               namePatterns.foldLeft(Seq.empty[Json]) {
                 case (acc, (name, pattern)) =>
-                  val value = json.nameValues.get(name).?
+                  val value = json.asMap.get(name).?
                   acc ++ pattern.unapplySeq(value).?
               }
           case _ => None

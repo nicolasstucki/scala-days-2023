@@ -2,9 +2,11 @@ package jsonlib
 
 import scala.language.dynamics
 
-final class JsonObject(private[jsonlib] val nameValues: Map[String, Json]) extends scala.Selectable:
+final class JsonObject(private val nameValues: Map[String, Json]) extends scala.Selectable:
   def selectDynamic(name: String): Json | JsonObject.Undefined.type =
     nameValues.getOrElse(name, JsonObject.Undefined)
+
+  def asMap: Map[String, Json] = nameValues
 
   override def toString(): String = nameValues.iterator.map {
     (name, value) => s"\"$name\" -> $value" // TODO escape characters of name
