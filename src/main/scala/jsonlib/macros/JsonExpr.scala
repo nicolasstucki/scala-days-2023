@@ -17,7 +17,7 @@ private[jsonlib] object JsonExpr:
     val argExprs: Seq[Expr[Json]] = argsExpr match
       case Varargs(argExprs) => argExprs
       case _ => quotes.reflect.report.errorAndAbort("Unpacking StringContext.json args* is not supported")
-    val jsonExpr: Expr[Json] = toJsonExpr(json, argExprs.iterator)
+    val jsonExpr: Expr[Json] = toJsonExpr(json, argExprs)
     Schema.refinedType(json, argExprs) match
       case '[t] => '{ $jsonExpr.asInstanceOf[t] }.asExprOf[Json]
 
@@ -45,21 +45,25 @@ private[jsonlib] object JsonExpr:
           case _ =>
             quotes.reflect.report.errorAndAbort("string context is not known statically")
 
-  private def toJsonExpr(ast: Pattern, args: Iterator[Expr[Json]])(using Quotes): Expr[Json] =
-    ast match
-      case Pattern.Null => '{ null }
-      case Pattern.Bool(value) => Expr(value)
-      case Pattern.Num(value) => Expr(value)
-      case Pattern.Str(value) => Expr(value)
-      case Pattern.Arr(values*) =>
-        val valueExprs = values.map(value => toJsonExpr(value, args))
-        '{ JsonArray(${Varargs(valueExprs)}*) }
-      case Pattern.Obj(nameValues*) =>
-        val nameValueExprs =
-          for (name, value) <- nameValues
-          yield Expr.ofTuple(Expr(name), toJsonExpr(value, args))
-        '{ JsonObject(${Varargs(nameValueExprs)}*) }
-      case Pattern.InterpolatedValue => args.next()
+  private def toJsonExpr(ast: Pattern, args: Seq[Expr[Json]])(using Quotes): Expr[Json] =
+    val argsIterator = args.iterator
+    def rec(ast: Pattern)(using Quotes): Expr[Json] =
+      ast match
+        case Pattern.Null => '{ null }
+        case Pattern.Bool(value) => Expr(value)
+        case Pattern.Num(value) => Expr(value)
+        case Pattern.Str(value) => Expr(value)
+        case Pattern.Arr(values*) =>
+          val valueExprs = values.map(value => rec(value))
+          '{ JsonArray(${Varargs(valueExprs)}*) }
+        case Pattern.Obj(nameValues*) =>
+          val nameValueExprs =
+            for (name, value) <- nameValues
+            yield Expr.ofTuple(Expr(name), rec(value))
+          '{ JsonObject(${Varargs(nameValueExprs)}*) }
+        case Pattern.InterpolatedValue =>
+          argsIterator.next()
+    rec(ast)
 
   private given ToExpr[Pattern] with
     def apply(pattern: Pattern)(using Quotes): Expr[Pattern] =
