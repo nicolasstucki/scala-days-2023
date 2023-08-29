@@ -47,20 +47,22 @@ private[jsonlib] object JsonExpr:
 
   private def toJsonExpr(ast: Pattern, args: Seq[Expr[Json]])(using Quotes): Expr[Json] =
     val argsIterator = args.iterator
-    def rec(ast: Pattern)(using Quotes): Expr[Json] =
+    def rec(ast: Pattern): Expr[Json] =
       ast match
         case Pattern.Null => '{ null }
         case Pattern.Bool(value) => Expr(value)
         case Pattern.Num(value) => Expr(value)
         case Pattern.Str(value) => Expr(value)
         case Pattern.Arr(values*) =>
-          val valueExprs = values.map(value => rec(value))
-          '{ JsonArray(${Varargs(valueExprs)}*) }
+          val valueExprs: Seq[Expr[Json]] = values.map(rec)
+          val valuesExpr: Expr[Seq[Json]] = Varargs(valueExprs)
+          '{ JsonArray($valuesExpr*) }
         case Pattern.Obj(nameValues*) =>
-          val nameValueExprs =
-            for (name, value) <- nameValues
-            yield Expr.ofTuple(Expr(name), rec(value))
-          '{ JsonObject(${Varargs(nameValueExprs)}*) }
+          val nameExprValueExprs: Seq[(Expr[String], Expr[Json])]  =
+            for (name, value) <- nameValues yield (Expr(name), rec(value))
+          val nameValueExprs: Seq[Expr[(String, Json)]] = nameExprValueExprs.map(Expr.ofTuple)
+          val nameValuesExpr: Expr[Seq[(String, Json)]] = Varargs(nameValueExprs)
+          '{ JsonObject($nameValuesExpr*) }
         case Pattern.InterpolatedValue =>
           argsIterator.next()
     rec(ast)
