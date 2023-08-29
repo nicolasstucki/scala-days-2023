@@ -20,7 +20,8 @@ private enum Schema:
 private object Schema:
 
   def refinedType(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Type[? <: Json] =
-    refinedType(schema(pattern, args))
+    val jsonSchema: Schema = schema(pattern, args)
+    refinedType(jsonSchema)
 
   private def refinedType(schema: Schema)(using Quotes): Type[? <: Json] =
     schema match
@@ -28,7 +29,8 @@ private object Schema:
       case Schema.Obj(nameSchemas*) =>
         import quotes.reflect.*
         val refined = nameSchemas.foldLeft(TypeRepr.of[JsonObject]) { case (acc, (name, schema)) =>
-          Refinement(acc, name, TypeRepr.of(using refinedType(schema)))
+          refinedType(schema) match
+            case '[t] => Refinement(acc, name, TypeRepr.of[t])
         }
         refined.asType.asInstanceOf[Type[? <: JsonObject]]
         // With SIP-53:
