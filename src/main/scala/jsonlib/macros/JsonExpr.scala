@@ -30,7 +30,7 @@ private[jsonlib] object JsonExpr:
       case _ => quotes.reflect.report.errorAndAbort("Expected call to extension method `json(StringContext): JsonStringContext`")
 
   private def parsed(stringContext: Expr[StringContext])(using Quotes): Pattern =
-    val jsonString = stringContext.valueOrAbort.parts.map(scala.StringContext.processEscapes)
+    val jsonString: Seq[String] = stringContext.valueOrAbort.parts.map(scala.StringContext.processEscapes)
     Parser(jsonString).parse() match
       case Success(json) => json
       case Error(ParseError(msg, location)) =>
