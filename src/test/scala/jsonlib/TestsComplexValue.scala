@@ -24,4 +24,14 @@ class TestsComplexValue extends munit.FunSuite {
         assertEquals(y: Json, true) // TODO refine the type of y if possible
       case _ =>
   }
+  test("slides example") {
+    val firstTalk: JsonObject { val name: String; val speaker: String } =
+      json""" { "name": "Resource Management Made Easy", "speaker": "Julien Truffaut" } """
+    val secondTalk: JsonObject { val name: String; val speaker: String } =
+      json""" { "name": "Implementing A Macro", "speaker": "Nicolas Stucki" } """
+    val talks: JsonArray { def apply(idx: Int): JsonObject { val name: String; val speaker: String } }  =
+      json" [ $firstTalk, $secondTalk ] "
+
+    val name: String = talks(0).name
+  }
 }
