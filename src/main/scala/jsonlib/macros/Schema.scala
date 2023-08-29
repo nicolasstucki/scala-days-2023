@@ -20,7 +20,7 @@ private enum Schema:
 private object Schema:
 
   def refinedType(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Type[? <: Json] =
-    refinedType(schema(pattern, args.iterator))
+    refinedType(schema(pattern, args))
 
   private def refinedType(schema: Schema)(using Quotes): Type[? <: Json] =
     schema match
@@ -42,30 +42,33 @@ private object Schema:
       case Schema.Bool => Type.of[Boolean]
       case Schema.Null => Type.of[Null]
 
-  private def schema(pattern: Pattern, args: Iterator[Expr[Json]])(using Quotes): Schema =
-    pattern match
-      case Pattern.Obj(nameValues*) =>
-        val nameSchemas: Seq[(String, Schema)] =
-          for (name, value) <- nameValues
-          yield (name, schema(value, args))
-        Schema.Obj(nameSchemas*)
-      case Pattern.Arr() => Schema.Arr(Schema.Value)
-      case Pattern.Arr(patterns*) =>
-        val elementSchema: Schema =
-          patterns
-            .map(pattern => schema(pattern, args))
-            .reduce(union)
-        Schema.Arr(elementSchema)
-      case Pattern.Str(_) => Schema.Str
-      case Pattern.Num(_) => Schema.Num
-      case Pattern.Bool(_) => Schema.Bool
-      case Pattern.Null => Schema.Null
-      // Version 1: Only take into account the pattern
-      //  case Pattern.InterpolatedValue => Schema.Value
-      // Version 2: Take into account the statically known type of the interpolated value
-      case Pattern.InterpolatedValue =>
-        args.next() match
-          case '{ type t <: Json; $x : `t` } => schemaOf[t]
+  private def schema(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Schema =
+    val argsIterator = args.iterator
+    def rec(pattern: Pattern): Schema =
+      pattern match
+        case Pattern.Obj(nameValues*) =>
+          val nameSchemas: Seq[(String, Schema)] =
+            for (name, value) <- nameValues
+            yield (name, rec(value))
+          Schema.Obj(nameSchemas*)
+        case Pattern.Arr() => Schema.Arr(Schema.Value)
+        case Pattern.Arr(patterns*) =>
+          val elementSchema: Schema =
+            patterns
+              .map(pattern => rec(pattern))
+              .reduce(union)
+          Schema.Arr(elementSchema)
+        case Pattern.Str(_) => Schema.Str
+        case Pattern.Num(_) => Schema.Num
+        case Pattern.Bool(_) => Schema.Bool
+        case Pattern.Null => Schema.Null
+        // Version 1: Only take into account the pattern
+        //  case Pattern.InterpolatedValue => Schema.Value
+        // Version 2: Take into account the statically known type of the interpolated value
+        case Pattern.InterpolatedValue =>
+          argsIterator.next() match
+            case '{ type t <: Json; $x : `t` } => schemaOf[t]
+    rec(pattern)
 
   private def schemaOf[T <: Json](using Type[T])(using Quotes): Schema =
     Type.of[T] match

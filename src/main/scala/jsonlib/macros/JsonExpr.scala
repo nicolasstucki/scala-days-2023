@@ -18,7 +18,8 @@ private[jsonlib] object JsonExpr:
       case Varargs(argExprs) => argExprs
       case _ => quotes.reflect.report.errorAndAbort("Unpacking StringContext.json args* is not supported")
     val jsonExpr: Expr[Json] = toJsonExpr(json, argExprs)
-    Schema.refinedType(json, argExprs) match
+    val refinedJsonType: Type[? <: Json] = Schema.refinedType(json, argExprs)
+    refinedJsonType match
       case '[t] => '{ $jsonExpr.asInstanceOf[t] }.asExprOf[Json]
 
   def jsonUnapplySeqExpr(jsonStringContext: Expr[JsonStringContext], scrutinee: Expr[Json])(using Quotes): Expr[Option[Seq[Json]]] =
