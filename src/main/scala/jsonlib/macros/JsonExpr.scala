@@ -29,17 +29,18 @@ private[jsonlib] object JsonExpr:
         '{ ${Expr(jsonPattern)}.unapplySeq($scrutinee) }
       case _ => quotes.reflect.report.errorAndAbort("Expected call to extension method `json(StringContext): JsonStringContext`")
 
-  private def parsed(stringContext: Expr[StringContext])(using Quotes): Pattern =
-    val jsonString: Seq[String] = stringContext.valueOrAbort.parts.map(scala.StringContext.processEscapes)
+  private def parsed(stringContextExpr: Expr[StringContext])(using Quotes): Pattern =
+    val stringContext: StringContext = stringContextExpr.valueOrAbort
+    val jsonString: Seq[String] = stringContext.parts.map(scala.StringContext.processEscapes)
     Parser(jsonString).parse() match
       case Success(json) => json
       case Error(ParseError(msg, location)) =>
         def error(args: Seq[Expr[String]]) =
           import quotes.reflect.*
           val baseOffset = args(location.partIndex).asTerm.pos.start
-          val pos = Position(stringContext.asTerm.pos.sourceFile, baseOffset + location.offset, baseOffset + location.offset)
+          val pos = Position(stringContextExpr.asTerm.pos.sourceFile, baseOffset + location.offset, baseOffset + location.offset)
           report.errorAndAbort(msg, pos)
-        stringContext match
+        stringContextExpr match
           case '{ new scala.StringContext(${Varargs(args)}: _*) } => error(args)
           case '{     scala.StringContext(${Varargs(args)}: _*) } => error(args)
           case _ =>
