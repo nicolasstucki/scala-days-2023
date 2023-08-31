@@ -1,6 +1,6 @@
 package jsonlib
 
-final class JsonArray(private val values: Json*):
+final class JsonArray(private[jsonlib] val values: Json*):
   def apply(idx: Int): Json = values(idx)
   def length: Int = values.length
 

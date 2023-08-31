@@ -23,6 +23,11 @@ class TestsComplexValue extends munit.FunSuite {
         assertEquals(x: Json, user) // TODO refine the type of x if possible
         assertEquals(y: Json, true) // TODO refine the type of y if possible
       case _ =>
+
+    json"[1, 2, 3]" match
+      case json"[1, 2]" => ???
+      case json"[1, 2, 3]" => // OK
+
   }
   test("slides example") {
     val firstTalk: JsonObject { val name: String; val speaker: String } =

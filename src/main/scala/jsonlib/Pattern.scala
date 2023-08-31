@@ -39,9 +39,9 @@ enum Pattern:
           case _ => None
       case Arr(patterns*) =>
         json match
-          case values: Seq[Json] =>
+          case json: JsonArray if patterns.length == json.length =>
             optional:
-              values.zip(patterns).foldLeft(Seq.empty[Json]) {
+              json.values.zip(patterns).foldLeft(Seq.empty[Json]) {
                 case (acc, (value, pattern)) =>
                   acc ++ pattern.unapplySeq(value).?
               }
