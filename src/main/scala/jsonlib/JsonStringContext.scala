@@ -16,3 +16,9 @@ object JsonStringContext:
 
     inline def unapplySeq(scrutinee: Json): Option[Seq[Json]] =
       ${ jsonUnapplySeqExpr('jsonStringContext, 'scrutinee) }
+
+    // Exercise: replace `unapplySeq` with transparent `unapply` that return a tuple.
+    //           The macro should return a tuple of known size. Can start with
+    //           `(Json, ..., Json)`). The the idea is to refine the types of the tuple
+    //           based on the type of the scrutinee and the shape of the pattern.
+    // transparent inline def unapply(inline scrutinee: Json): Option[Tuple] =

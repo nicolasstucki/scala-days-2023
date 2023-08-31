@@ -26,6 +26,7 @@ private[jsonlib] object JsonExpr:
     jsonStringContext match
       case '{ jsonlib.json($stringContext) } =>
         val jsonPattern: Pattern = parsed(stringContext)
+        // Exercise: inline the scrutinee, analyze its type and check if it could match the pattern. Warn if not.
         // Exercise: partially evaluate the pattern matching
         '{ ${Expr(jsonPattern)}.unapplySeq($scrutinee) }
       case _ => quotes.reflect.report.errorAndAbort("Expected call to extension method `json(StringContext): JsonStringContext`")
