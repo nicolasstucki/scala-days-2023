@@ -1,4 +1,5 @@
-## Scala 3 macro examples
+## Scala Days 2023 - Macro implementation
+
 
 ### Usage
 
