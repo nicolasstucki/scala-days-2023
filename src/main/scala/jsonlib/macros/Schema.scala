@@ -78,7 +78,18 @@ private object Schema:
       case '[Boolean] => Schema.Bool
       case '[String] => Schema.Str
       case '[Double] => Schema.Num
-      case '[JsonArray] => Schema.Arr(Schema.Value) // TODO refine element type
+      case '[JsonArray] =>
+        import quotes.reflect.*
+        val  refinedSchema =
+          TypeRepr.of[T].widen match
+            case Refinement(parent, "apply", MethodType(_, _, resType)) =>
+              val tpe = resType.asType.asInstanceOf[Type[? <: Json]]
+              // With SIP-53:
+              // val  refinedSchema = resType.asType match
+              //   case '[type t <: Json; t] => schemaOf[t]
+              schemaOf(using tpe)
+            case _ => Schema.Value
+        Schema.Arr(refinedSchema)
       case '[JsonObject] =>
         import quotes.reflect.*
         def refinements(tpe: TypeRepr): Vector[(String, Schema)] =

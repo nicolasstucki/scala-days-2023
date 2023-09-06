@@ -11,9 +11,21 @@ class TestsComplexValue extends munit.FunSuite {
     "user": $user,
     "active": $bool
   }"""
+  val user2 = json"""{
+    "firstName": "John"
+  }"""
+
+  val stringArray = json"""[ "name1", "name2" ]"""
+  val objectWithArray = json"""{ "arr": $stringArray }"""
+
   test("selection") {
     assertEquals(account.active: Boolean, true)
     assertEquals(account.user.firstName: String, "John")
+  }
+
+  test("selection1") {
+    assertEquals(objectWithArray.arr(0): String, "name1")
+    assertEquals(objectWithArray.arr(1): String, "name2")
   }
 
   test("pattern matching") {
