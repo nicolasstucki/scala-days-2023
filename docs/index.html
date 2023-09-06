@@ -378,7 +378,7 @@
             <pre data-id="parsed" style="width: 89%;"><code class="scala" data-trim data-noescape data-line-numbers="3">
               def parsed(scExpr: Expr[StringContext])(using Quotes): Pattern =
                 val sc: StringContext = scExpr.valueOrAbort
-                val jsonString: Seq[String] = sc.parts.map(scala.StringContext.processEscapes)
+                val parts: Seq[String] = sc.parts.map(scala.StringContext.processEscapes)
                 ...
             </code></pre>
             <ul>
@@ -390,10 +390,10 @@
             <pre data-id="parsed" style="width: 89%;"><code class="scala" data-trim data-noescape data-line-numbers="4-6">
               def parsed(scExpr: Expr[StringContext])(using Quotes): Pattern =
                 val sc: StringContext = scExpr.valueOrAbort
-                val jsonString: Seq[String] = sc.parts.map(scala.StringContext.processEscapes)
-                Parser(jsonString).parse() match
-                  case Success(jsonPattern) => jsonPattern
-                  case Error(ParseError(msg, location)) => // report error
+                val parts: Seq[String] = sc.parts.map(scala.StringContext.processEscapes)
+                Parser(parts).parse() match
+                  case Parsed(pattern) => pattern
+                  case ParseError(msg, location) => // report error
             </code></pre>
             <ul>
               <li>Parse the string parts into a <code>Pattern</code> AST</li>
@@ -1214,108 +1214,115 @@
           </section>
 
           <section>
+            <section class="red-slide" data-background-color="var(--r-background-color-red-slide)">
+              <h2>Precise error reporting</h2>
+              <pre style="width:70%"><code class="scala" data-trim data-noescape data-line-numbers>
+                json""" { "name": $name, "speaker" = $speaker } """
+                                                   <span style="color:#ff5e5e">^</span>
+                                                   <span style="color:#ff5e5e">expected `:` but found `=`</span>
+              </code></pre>
+            </section>
             <section data-auto-animate>
-              <pre style="width:70%" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="6-8">
-                def jsonExpr(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
-                  val jsonPattern: Pattern = parsed(scExpr)
-                  val argExprs: Seq[Expr[Json]] = argsExpr match
-                    case Varargs(argExprs) => argExprs
-                    case _ =>
-                      quotes.reflect.report.errorAndAbort(
-                        "unpacking string context json args* is not supported"
-                      )
-                  ...
+              <h3>Location in string interpolator</h3>
+              <pre data-id="example" style="width:72%"><code class="scala" data-trim data-noescape data-line-numbers>
+                json""" { "name": $name, "speaker" = $speaker } """
+                       ^^^^^^^^^^^     ^^^^^^^^^^^^^^        ^^^
+                       part 0          part 1                part 2
               </code></pre>
-              <pre style="width:70%" data-id="example"><code class="scala" data-trim data-noescape data-line-numbers>
-                StringContext(" [ ", ", ", "] ").json(firstTalk, secondTalk) // ok
+            </section>
+            <section data-auto-animate>
+              <h3>Location in string interpolator</code></h3>
+              <pre data-id="example" style="width:72%"><code class="scala" data-trim data-noescape data-line-numbers>
+                json""" { "name": $name, "speaker" = $speaker } """
+                       ^^^^^^^^^^^     ^^^^^^^^^^^^<span style="color: #ff5e5e;">^</span>^        ^^^
+                       part 0          part 1      <span style="color: #ff5e5e;">|</span>         part 2
+                                                   <span style="color: #ff5e5e;">└</span> Location(partIndex = 1, offset = 12)
+              </code></pre>
+              <pre style="width:72%"><code class="scala" data-trim data-noescape>
+                class Location(<span class="hljs-keyword">val</span> partIndex: Int, <span class="hljs-keyword">val</span> offset: Int)
+              </code></pre>
+            </section>
 
-                StringContext(" [ ", ", ", "] ").json(args*)
-                <span style="color:red">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
-                <span style="color:red">unpacking string context json args* is not supported</code>
-              </code></pre>
-          </section>
           <section data-auto-animate>
-            <pre style="width:70%" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="6-9">
-              def jsonExpr(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
-                val jsonPattern: Pattern = parsed(scExpr)
-                val argExprs: Seq[Expr[Json]] = argsExpr match
-                  case Varargs(argExprs) => argExprs
-                  case _ =>
-                    quotes.reflect.report.errorAndAbort(
-                      "unpacking string context json args* is not supported",
-                      argExprs
-                    )
-                ...
+            <h3>Location in string interpolator</h3>
+            <pre data-id="example" style="width:72%"><code class="scala" data-trim data-noescape data-line-numbers>
+              json""" { "name": $name, "speaker" = $speaker } """
+                                                 <span style="color: #ff5e5e;">└</span> Location(partIndex = 1, offset = 12)
             </code></pre>
-            <pre style="width:70%" data-id="example"><code class="scala" data-trim data-noescape data-line-numbers="3-5">
-              StringContext(" [ ", ", ", "] ").json(firstTalk, secondTalk) // ok
-
-              StringContext(" [ ", ", ", "] ").json(args*)
-                                                    <span style="color:red">^^^^^</span>
-              <span style="color:red">unpacking string context json args* is not supported</code>
-            </code></pre>
-          </section>
-
-          <section>
-            <pre style="width:70%"><code class="scala" data-trim data-noescape data-line-numbers>
-              <span class="hljs-string">json</span>&#8203""" { "name": $name, "speaker" = $speaker } """
-            </code></pre>
-            <pre style="width:70%"><code class="scala" data-trim data-noescape data-line-numbers>
-              <span class="hljs-string">json</span>&#8203""" { "name": $name, "speaker" = $speaker } """
-                    ^^^^^^^^^^^     ^^^^^^^^^^^^^^        ^^^
-                    part 0          part 1                part 2
-            </code></pre>
-            <pre style="width:70%"><code class="scala" data-trim data-noescape data-line-numbers>
-              <span class="hljs-string">json</span>&#8203""" { "name": $name, "speaker" = $speaker } """
-                                                ^
-                                                Location(partIndex = 1, offset = 12)
-            </code></pre>
-            <pre style="width:70%"><code class="scala" data-trim data-noescape>
-              def parsed(stringContextExpr: Expr[StringContext])(using Quotes): Pattern =
-                val stringContext: StringContext = stringContextExpr.valueOrAbort
-                val jsonString: Seq[String] = stringContext.parts.map(scala.StringContext.processEscapes)
-                Parser(jsonString).parse() match
-                  case Success(json) => json
-                  case Error(ParseError(msg, location)) =>
+            <pre data-id="parsed" style="width:72%"><code class="scala" data-trim data-noescape data-line-numbers="4-6">
+              def parsed(scExpr: Expr[StringContext])(using Quotes): Pattern =
+                val sc: StringContext = scExpr.valueOrAbort
+                val parts = sc.parts.map(scala.StringContext.processEscapes)
+                Parser(parts).parse() match
+                  case Parsed(pattern) => pattern
+                  case ParseError(msg, location) =>
                     ...
             </code></pre>
-            <pre style="width:70%"><code class="scala" data-trim data-noescape>
-              class Location(val partIndex: Int, val offset: Int)
+          </section>
+
+          <section data-auto-animate>
+            <h3>Location in string interpolator</h3>
+            <pre data-id="example" style="width:72%"><code class="scala" data-trim data-noescape data-line-numbers>
+              json""" { "name": $name, "speaker" = $speaker } """
+              <span style="color:#ff5e5e">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
+                                                 <span style="color: #ff5e5e;">└</span> Location(partIndex = 1, offset = 12)
+            </code></pre>
+            <pre data-id="parsed" style="width:72%"><code class="scala" data-trim data-noescape data-line-numbers="6-9">
+              def parsed(scExpr: Expr[StringContext])(using Quotes): Pattern =
+                val sc: StringContext = scExpr.valueOrAbort
+                val parts = sc.parts.map(scala.StringContext.processEscapes)
+                Parser(parts).parse() match
+                  case Parsed(pattern) => pattern
+                  case ParseError(msg, location) =>
+                    quotes.report.errorAndAbort(msg)
             </code></pre>
           </section>
 
-          <section>
-            <pre style="width:70%"><code class="scala" data-trim data-noescape>
-              <span class="hljs-string">json</span>&#8203""" { "name": $name, "speaker" = $speaker } """
-                    ^^^^^^^^^^^     ^^^^^^^^^^^^^^        ^^^
-                    part 0          part 1                part 2
+          <section data-auto-animate>
+            <h3>Location in string interpolator</h3>
+            <pre data-id="example" style="width:72%"><code class="scala" data-trim data-noescape data-line-numbers>
+              json""" { "name": $name, "speaker" = $speaker } """
+                                     <span style="color:#ff5e5e">^^^^^^^^^^^^^^</span>
+                                                 <span style="color: #ff5e5e;">└</span> Location(partIndex = 1, offset = 12)
             </code></pre>
-            <pre style="width:70%"><code class="scala" data-trim data-noescape>
-              <span class="hljs-string">json</span>&#8203""" { "name": $name, "speaker" = $speaker } """
-                                                ^
-                                                Location(partIndex = 1, offset = 12)
+            <pre data-id="parsed" style="width:72%"><code class="scala" data-trim data-noescape data-line-numbers="6-9">
+              def parsed(scExpr: Expr[StringContext])(using Quotes): Pattern =
+                val sc: StringContext = scExpr.valueOrAbort
+                val parts = sc.parts.map(scala.StringContext.processEscapes)
+                Parser(parts).parse() match
+                  case Parsed(pattern) => pattern
+                  case ParseError(msg, location) =>
+                    val '{ scala.StringContext(${Varargs(partExprs)}: _*) } = scExpr
+                    val partWithError: Expr[String] = partExprs(location.partIndex)
+                    quotes.report.errorAndAbort(msg, partWithError)
             </code></pre>
-            <pre style="width:70%"><code class="scala" data-trim data-noescape>
-              def parsed(stringContextExpr: Expr[StringContext])(using Quotes): Pattern =
-                val stringContext: StringContext = stringContextExpr.valueOrAbort
-                val jsonString: Seq[String] = stringContext.parts.map(scala.StringContext.processEscapes)
-                Parser(jsonString).parse() match
-                  case Success(json) => json
-                  case Error(ParseError(msg, location)) =>
-                    val '{ scala.StringContext(${Varargs(args)}: _*) } = stringContextExpr
+          </section>
+
+          <section data-auto-animate>
+            <h3>Location in string interpolator</h3>
+            <pre data-id="example" style="width:72%"><code class="scala" data-trim data-noescape data-line-numbers>
+              json""" { "name": $name, "speaker" = $speaker } """
+                                                 <span style="color:#ff5e5e">^</span>
+                                                 <span style="color: #ff5e5e;">└</span> Location(partIndex = 1, offset = 12)
+            </code></pre>
+            <pre data-id="parsed" style="height: 550px;width:72%"><code class="scala" data-trim data-noescape data-line-numbers="9-13">
+              def parsed(scExpr: Expr[StringContext])(using Quotes): Pattern =
+                val sc: StringContext = scExpr.valueOrAbort
+                val parts = sc.parts.map(scala.StringContext.processEscapes)
+                Parser(parts).parse() match
+                  case Parsed(pattern) => pattern
+                  case ParseError(msg, location) =>
+                    val '{ scala.StringContext(${Varargs(partExprs)}: _*) } = scExpr
+                    val partWithError: Expr[String] = partExprs(location.partIndex)
                     import quotes.reflect.*
-                    val sourceFile = stringContextExpr.asTerm.pos.sourceFile
-                    val baseOffset = args(location.partIndex).asTerm.pos.start
+                    val sourceFile = scExpr.asTerm.pos.sourceFile
+                    val baseOffset = partWithError.asTerm.pos.start
                     val offset = baseOffset + location.offset
                     report.errorAndAbort(msg, Position(sourceFile, offset, offset + 1))
             </code></pre>
-            <pre style="width:70%"><code class="scala" data-trim data-noescape>
-              class Location(val partIndex: Int, val offset: Int)
-            </code></pre>
-
           </section>
-
         </section>
+
 
         <section class="red-slide" data-background-color="var(--r-background-color-red-slide)" data-background-image="images/scala-days-background-3.png" data-background-size="auto 100%" data-background-position="right">
           <div style="text-align: left; padding-left: 15%;">
