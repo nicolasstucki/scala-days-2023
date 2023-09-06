@@ -1,6 +1,10 @@
 ## Scala Days 2023 - Macro implementation
 
 
+### Scala Days Presentation
+
+* Slides: https://nicolasstucki.github.io/scala-days-2023/
+
 ### Usage
 
 This is a normal sbt project. You can compile code with `sbt compile`, test it with `sbt test`, and `sbt console` will start a Scala 3 REPL.
