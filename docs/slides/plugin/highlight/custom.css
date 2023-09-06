@@ -1,0 +1,133 @@
+/*
+Monokai style - ported by Luigi Maselli - http://grigio.org
+*/
+
+.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0.5em;
+  background: #272822;
+  color: #f2f2f2;
+  font-size: 1.3em;
+}
+
+.hljs-ln tr {
+  height: 1.4em ;
+}
+
+.hljs-tag,
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-strong,
+.hljs-name {
+  color: #ff5e5e;
+}
+
+.hljs-code {
+  color: #66d9ef;
+}
+
+.hljs-class .hljs-title {
+  color: #88b2f4;
+}
+
+.hljs-attribute,
+/* .hljs-symbol, */
+.hljs-regexp,
+.hljs-link {
+  color: #bf79db;
+}
+
+.hljs-title {
+  color: #ecc743;
+}
+
+.hljs-number,
+.hljs-string {
+  color: #16ca18;
+}
+
+.hljs-bullet,
+.hljs-subst,
+.hljs-section,
+.hljs-emphasis,
+.hljs-type,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-selector-attr,
+.hljs-selector-pseudo,
+.hljs-addition,
+.hljs-variable,
+.hljs-template-tag,
+.hljs-template-variable {
+  color: #88b2f4;
+}
+
+.hljs-comment,
+.hljs-quote,
+.hljs-deletion,
+.hljs-meta {
+  color: #67cff8;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-doctag,
+.hljs-title,
+.hljs-section,
+.hljs-type,
+.hljs-selector-id {
+  font-weight: bold;
+}
+
+.compiled {
+  background: #555555;
+  color: #fff;
+  margin-top: 2px;
+}
+
+.compiled .hljs-keyword {
+  color: #fd7171;
+}
+.compiled .hljs-title {
+  color: #fddf75;
+}
+
+.compiled .hljs-type {
+  color: #91bcff;
+}
+
+.compiled .hljs-number,
+.compiled .hljs-string {
+  color: #4fd451;
+}
+
+.evaluated {
+  background: #fff;
+  color: #000;
+  font-weight: bold;
+  margin-top: 3px;
+}
+
+.evaluated .hljs-comment{
+  color: #3cc1f6;
+}
+
+.evaluated .hljs-keyword {
+  color: #fc2727;
+}
+
+.evaluated .hljs-title {
+  color: #fddf75;
+}
+
+.evaluated .hljs-type {
+  color: #5294ff;
+}
+
+.evaluated .hljs-number,
+.evaluated .hljs-string {
+  color: #2aac2c;
+}

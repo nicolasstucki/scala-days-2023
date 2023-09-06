@@ -1,0 +1,1460 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>reveal.js</title>
+
+    <link rel="icon" href="images/ce-gars-la.svg">
+
+    <link rel="stylesheet" href="reveal-js/reset.css">
+    <link rel="stylesheet" href="reveal-js/reveal.css">
+    <link rel="stylesheet" href="reveal-js/theme/custom.css">
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/custom.css">
+
+    <style>
+
+      /* TODO DISABLE */
+      .slides { border:1px;border-style:solid;border-color:grey; }
+
+      h2 {
+        padding-bottom: 60px;
+      }
+      h3 {
+        padding-bottom: 40px;
+      }
+      .syntax-row {
+        display: grid;
+        grid-template-columns: 1fr 0.5fr 0.5fr 4fr;
+      }
+      .syntax-row > div {
+        padding: 1ex;
+      }
+      .syntax-row > div:nth-child(1) {
+        text-align: right
+      }
+      .syntax-row > div:nth-child(2) {
+        text-align: right
+      }
+      .syntax-row > div:nth-child(3) {
+        text-align: center
+      }
+      .syntax-row > div:nth-child(4) {
+        text-align: left
+      }
+      .environment-row {
+        display: grid;
+        grid-template-columns: 3fr 0.5fr 1fr 3fr;
+      }
+      .environment-row > div {
+        padding: 1ex;
+      }
+      .environment-row > div:nth-child(1) {
+        text-align: right
+      }
+      .environment-row > div:nth-child(2) {
+        text-align: right
+      }
+      .environment-row > div:nth-child(3) {
+        text-align: center
+      }
+      .environment-row > div:nth-child(4) {
+        text-align: left
+      }
+      .two-columns {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        padding: 40px
+      }
+      .two-columns-two-one {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        padding: 40px
+      }
+      .three-columns {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        padding: 40px
+      }
+      .formula {
+        padding: 40px
+      }
+
+      :root {
+            --cursor-color: 252, 39, 39;
+            --cursor-size: 2em;
+      }
+      .reveal {
+          cursor: none;
+      }
+      .custom-cursor {
+          position: absolute;
+          z-index: 99;
+          top: 0;
+          left: 0;
+
+          width: var(--cursor-size);
+          height: var(--cursor-size);
+
+          border: calc(var(--cursor-size)
+                      /10) solid #fff;
+          border-radius: 50%;
+
+          animation: cursor 800ms infinite
+                  alternate ease-in-out;
+          pointer-events: none;
+          border-color: rgba(var(--cursor-color), 0);
+      }
+      .custom-cursor.laser-focus::before {
+          content: "";
+          display: block;
+          width: calc(var(--cursor-size) / 2);
+          height: calc(var(--cursor-size) / 2);
+
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+
+          background-color: rgba(var(--cursor-color));
+          border: calc(var(--cursor-size) / 10)
+                  solid rgb(var(--cursor-color));
+
+          border-radius: 50%;
+      }
+      .custom-cursor.laser-unfocus::before {
+          content: "";
+          display: block;
+          width: calc(var(--cursor-size) * 2);
+          height: calc(var(--cursor-size) * 0.5);
+
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) scale(2);
+          border-color: rgba(var(--cursor-color), 0.5);
+          background-color: rgba(var(--cursor-color), 0.2);
+
+          border: calc(var(--cursor-size) / 10)
+                  solid rgb(var(--cursor-color));
+
+          border-radius: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="custom-cursor laser-focus"></div>
+    <div class="reveal">
+      <div class="slides">
+
+        <section class="red-slide" data-background-color="var(--r-background-color-red-slide)" data-background-image="images/scala-days-background.png">
+          <div style="text-align: left; padding: 200px;">
+
+            <div style="margin-bottom:100px; font-size: 2.5em; letter-spacing:-0.4rem">
+              <span style="font-weight: 200">Scala</span><span style="font-weight: 600">Days</span>
+            </div>
+            <h1 style="font-weight: 600">Implementing a Macro</h1>
+            <h1 style="font-size:2em;">in Scala 3</h1>
+            <div style="padding-top:50px;padding-bottom:50px"></div>
+            <div style="padding-bottom:50px;font-weight: 600;">Nicolas Stucki</div>
+            <div style="font-weight: 500;">LAMP / EPFL</div>
+            </div>
+        </section>
+
+
+				<section>
+					<h3>Overview</h3>
+          <ul>
+            From the perspective of macro implementation
+          <ul>
+						<li class="fragment">Write a macro string interpolators (small JSON DSL)</li>
+						<li class="fragment">Write a macro extractor using string interpolators</li>
+						<li class="fragment">Transparent macro and type refinements</li>
+						<li class="fragment">Precise error reporting</li>
+					</ul>
+					</ul>
+				</section>
+
+        <section>
+					<h3>ECMA-404</h3>
+          <div style="margin-left: 100px;margin-top: 100px;">
+            <ul>
+              <span style="margin-left: -2em;">JSON value</span>
+              <li><span style="font-style: italic;">object</span>: name/value pairs</li>
+              <li><span style="font-style: italic;">array</span>: sequence of values</li>
+              <li><span style="font-style: italic;">string</span></li>
+              <li class="fragment semi-fade-out" data-fragment-index="1"><span style="font-style: italic;">number</span></li>
+              <li class="fragment semi-fade-out" data-fragment-index="1">literals: true, false , null</li>
+            </ul>
+          </div>
+
+        </section>
+
+        <section>
+          <section>
+            <h3>JSON representation in Scala</h3>
+
+            <ul>
+              <li>For our purposes we want to have types for each JSON value</li>
+              <li>Directly use <code>String</code></li>
+              <li>Custom <code>JsonObject</code> and <code>JsonArray</code></li>
+
+            <pre><code class="scala" data-trim data-noescape>
+              type Json = JsonObject | JsonArray | String
+            </code></pre>
+
+          </ul>
+
+          </section>
+
+          <section>
+            <h3>JsonArray</h3>
+
+            <ul>
+              <li>Trivial wrapper over a sequence</li>
+            </ul>
+            <pre><code class="scala" data-trim data-noescape data-line-numbers>
+              class JsonArray(values: Json*):
+                def apply(idx: Int): Json = values(idx)
+                def length: Int = values.length
+            </code></pre>
+          </section>
+
+          <section>
+            <h3>JsonObject</h3>
+            <ul>
+              <li>Wrapper over a name/value map</li>
+              <li>Uses <code>scala.Selectable</code></li>
+            </ul>
+
+            <pre><code class="scala" data-trim data-noescape data-line-numbers="1-3|4-7">
+              import scala.language.dynamics
+
+              class JsonObject(nameValues: Map[String, Json]) extends scala.Selectable:
+                def selectDynamic(name: String): Json | Undefined.type =
+                  nameValues.getOrElse(name, Undefined)
+
+              object Undefined
+            </code></pre>
+          </section>
+
+          <section class="dark-slide" data-background-color="var(--r-background-color-dark-slide)">
+            <h3><code>scala.Selectable</code></h3>
+            <ul>
+              <li>If a member does not exist on a class with <code>scala.Selectable</code>,</li>
+                  it becomes a call to <code>selectDynamic</code>
+            <pre><code class="scala" data-trim data-noescape data-line-numbers>
+              val jsonObject: JsonObject = ...
+
+              val name: Json | Undefined = jsonObject.name // jsonObject.selectDynamic("name")
+              val date: Json | Undefined = jsonObject.children // jsonObject.selectDynamic("children")
+            </code></pre>
+            <li>Similar for applications with <code>applyDynamic</code></li>
+            <li>Can be enhanced with refinement types</li>
+          </ul>
+          </section>
+        </section>
+
+        <section>
+          <section class="red-slide" data-background-color="var(--r-background-color-red-slide)">
+
+            <h2>JSON String interpolator</h2>
+
+            <pre><code class="scala" data-trim data-noescape data-line-numbers>
+              val firstTalk: Json =
+                <span class="hljs-string">json</span>&#8203""" { "name": "Resource anagement Made Easy", "speaker": "Julien Truffaut" } """
+              val secondTalk: Json =
+                <span class="hljs-string">json</span>&#8203""" { "name": Implementing a Macro", "speaker": "Nicolas Stucki" } """
+              val talks: Json =
+                json" [ $firstTalk, $secondTalk ] "
+            </code></pre>
+
+          </section>
+
+          <section class="dark-slide" data-background-color="var(--r-background-color-dark-slide)">
+            <h3>scala.StringContext</h3>
+            <ul>
+              <pre><code class="scala" data-trim>
+                json" [ $firstTalk, $secondTalk ] "
+              </code></pre>
+              <li>String interpolation is desugared into <code>StringContext</code></li>
+                and a call to method <code>json</code>
+              <pre><code class="scala" data-trim>
+                StringContext(" [ ", ", ", "] ").json(firstTalk, secondTalk)
+              </code></pre>
+              <li>Usually implemented as an extension method</li>
+            </ul>
+          </section>
+
+          <section data-auto-animate>
+            <h3>Macro definition</h3>
+            <pre data-id="jsonExpr" style="width: 89%;"><code class="scala" data-trim data-noescape data-line-numbers>
+              extension (sc: StringContext)
+                inline def json(inline args: Json*): Json =
+                  ...
+            </code></pre>
+
+            <ul>
+              <li>Macro defined as extension inline method</li>
+              <li>Use inline arguments to elide the creation of a sequence</li>
+            </ul>
+          </section>
+          <section data-auto-animate>
+            <h3>Macro definition</h3>
+            <pre data-id="jsonExpr" style="width: 89%;"><code class="scala" data-trim data-noescape data-line-numbers>
+              extension (sc: StringContext)
+                inline def json(inline args: Json*): Json =
+                  ${ jsonExpr('sc, 'args) }
+
+              def jsonExpr(sc: Expr[StringContext], argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                ...
+            </code></pre>
+
+            <ul>
+              <li>Top level code splice to evaluate <code>jsonExpr</code> at compile-time</li>
+              <li>Quoted arguments to pass them as code expressions <code>Expr[T]</code></li>
+              <li>Need a <code>Quotes</code> quotation context</li>
+            </ul>
+          </section>
+
+          <section data-auto-animate>
+            <h3 data-id="stringContextJsonExampleTitle">Macro implementation</h3>
+
+            <pre data-id="jsonExpr" style="width: 89%;"><code class="scala" data-trim data-noescape data-line-numbers="1">
+              def jsonExpr(sc: Expr[StringContext], argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                ...
+
+              </code></pre>
+          </section>
+          <section data-auto-animate>
+            <h3 data-id="stringContextJsonExampleTitle">Macro implementation</h3>
+
+            <pre data-id="jsonExpr" style="width: 89%;"><code class="scala" data-trim data-noescape data-line-numbers="2">
+              def jsonExpr(sc: Expr[StringContext], argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                val jsonPattern: Pattern = parsed(sc)
+                ...
+
+              </code></pre>
+
+            <ul>
+              <li data-id="jsonExpr-description-1">Parse and validate the strings of the <code>StringContext</code></li>
+            </ul>
+
+            <pre data-id="stringContextJsonExample"><code class="scala" data-trim data-noescape data-line-numbers="1">
+              StringContext(" [ ", ", ", "] ")
+                .json(firstTalk, secondTalk)
+            </code></pre>
+
+          </section>
+
+          <section data-auto-animate>
+            <h3>Macro implementation</h3>
+
+            <pre data-id="jsonExpr" style="width: 89%;"><code class="scala" data-trim data-noescape data-line-numbers="3-5">
+              def jsonExpr(sc: Expr[StringContext], argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                val jsonPattern: Pattern = parsed(sc)
+                val Varargs(argExprs) = argsExpr
+                ...
+            </code></pre>
+
+            <ul>
+              <li data-id="jsonExpr-description-1">Parse and validate the strings of the <code>StringContext</code></li>
+              <li data-id="jsonExpr-description-2">Extract individual arguments from varargs</li>
+            </ul>
+
+            <pre data-id="stringContextJsonExample"><code class="scala" data-trim data-noescape data-line-numbers="2">
+              StringContext(" [ ", ", ", "] ")
+                .json(firstTalk, secondTalk)
+            </code></pre>
+          </section>
+
+          <section data-auto-animate>
+            <h3>Macro implementation</h3>
+
+            <pre data-id="jsonExpr" style="width: 89%;"><code class="scala" data-trim data-noescape data-line-numbers="6">
+              def jsonExpr(sc: Expr[StringContext], argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                val jsonPattern: Pattern = parsed(sc)
+                val Varargs(argExprs) = argsExpr
+                toJsonExpr(jsonPattern, argExprs)
+            </code></pre>
+
+            <ul>
+              <li data-id="jsonExpr-description-1">Parse and validate the strings of the <code>StringContext</code></li>
+              <li data-id="jsonExpr-description-2">Extract individual arguments from varargs</li>
+              <li data-id="jsonExpr-description-3">Compile the pattern and arguments into an <code>Expr[Json]</code></li>
+            </ul>
+
+            <div class="two-columns">
+              <pre data-id="stringContextJsonExample"><code class="scala" data-trim data-noescape data-line-numbers="">
+                StringContext(" [ ", ", ", "] ")
+                  .json(firstTalk, secondTalk)
+              </code></pre>
+              <div>
+                <pre data-id="stringContextJsonExample2"><code class="scala" data-trim data-noescape data-line-numbers="2">
+                  '{ JsonArray(firstTalk, secondTalk) }
+                </code></pre>
+              </div>
+            </div>
+          </section>
+          <section data-auto-animate>
+            <h3>Macro implementation</h3>
+
+            <pre data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers>
+              def jsonExpr(sc: Expr[StringContext], argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                val jsonPattern: Pattern = parsed(sc)
+                val Varargs(argExprs) = argsExpr
+                toJsonExpr(jsonPattern, argExprs)
+              </code></pre>
+          </section>
+
+          <section data-auto-animate>
+            <h3>Parsing the <code>StringContext</code></h3>
+            <pre data-id="jsonExpr" style="width: 89%;"><code class="scala" data-trim data-noescape data-line-numbers="2">
+              def jsonExpr(sc: Expr[StringContext], argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                val jsonPattern: Pattern = parsed(sc)
+                val Varargs(argExprs) = argsExpr
+                toJsonExpr(jsonPattern, argExprs)
+            </code></pre>
+            <pre data-id="parsed" style="width: 89%;"><code class="scala" data-trim data-noescape data-line-numbers>
+              def parsed(scExpr: Expr[StringContext])(using Quotes): Pattern =
+                ...
+            </code></pre>
+          </section>
+          <section data-auto-animate>
+            <h3>Parsing the <code>StringContext</code></h3>
+            <pre data-id="parsed" style="width: 89%;"><code class="scala" data-trim data-noescape data-line-numbers="2">
+              def parsed(scExpr: Expr[StringContext])(using Quotes): Pattern =
+                val sc: StringContext = scExpr.valueOrAbort
+            </code></pre>
+            <ul>
+              <li>Use <code>valueOrAbort</code> to get the value using <code>FromExpr[StringContext]</code></li>
+            </ul>
+          </section>
+          <section data-auto-animate>
+            <h3>Parsing the <code>StringContext</code></h3>
+            <pre data-id="parsed" style="width: 89%;"><code class="scala" data-trim data-noescape data-line-numbers="3">
+              def parsed(scExpr: Expr[StringContext])(using Quotes): Pattern =
+                val sc: StringContext = scExpr.valueOrAbort
+                val jsonString: Seq[String] = sc.parts.map(scala.StringContext.processEscapes)
+                ...
+            </code></pre>
+            <ul>
+              <li>Get the string parts of the interpolator</li>
+            </ul>
+          </section>
+          <section data-auto-animate>
+            <h3>Parsing the <code>StringContext</code></h3>
+            <pre data-id="parsed" style="width: 89%;"><code class="scala" data-trim data-noescape data-line-numbers="4-6">
+              def parsed(scExpr: Expr[StringContext])(using Quotes): Pattern =
+                val sc: StringContext = scExpr.valueOrAbort
+                val jsonString: Seq[String] = sc.parts.map(scala.StringContext.processEscapes)
+                Parser(jsonString).parse() match
+                  case Success(jsonPattern) => jsonPattern
+                  case Error(ParseError(msg, location)) => // report error
+            </code></pre>
+            <ul>
+              <li>Parse the string parts into a <code>Pattern</code> AST</li>
+              <pre data-id="pattern" style="width: 50%;"><code class="scala" data-trim data-noescape data-line-numbers>
+                enum Pattern:
+                  case ...
+              </code></pre>
+            </ul>
+          </section>
+
+          <section data-auto-animate>
+            <h3>JSON interpolator AST</h3>
+
+            <pre data-id="pattern" style="width: 50%;"><code class="scala" data-trim data-noescape data-line-numbers>
+              enum Pattern:
+                case Str(value: String)
+                case Arr(patterns: Pattern*)
+                case Obj(namePatterns: (String, Pattern)*)
+                case InterpolatedValue
+            </code></pre>
+          </section>
+          <section data-auto-animate>
+            <h3>JSON interpolator AST</h3>
+
+            <pre data-id="pattern" style="width: 50%;"><code class="scala" data-trim data-noescape data-line-numbers>
+              enum Pattern:
+                case Str(value: String)
+                case Arr(patterns: Pattern*)
+                case Obj(namePatterns: (String, Pattern)*)
+                case InterpolatedValue
+            </code></pre>
+            <ul>
+              <li>The following interpolation</li>
+              <pre data-id="jsonExpr"><code class="scala" data-trim data-noescape>
+                json""" { "name": $talkName, "track": "2" } """
+              </code></pre>
+              is parsed into
+              <pre data-id="toJsonExpr"><code class="scala" data-trim>
+                Obj("name" -> InterpolatedValue, "track" -> Str("2"))
+              </code></pre>
+            </ul>
+          </section>
+
+          <section data-auto-animate>
+            <h3>Compiling the pattern</h3>
+            <pre data-id="jsonExpr" style="width: 90%;"><code class="scala" data-trim data-noescape data-line-numbers="4">
+              def jsonExpr(sc: Expr[StringContext], argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                val jsonPattern: Pattern = parsed(sc)
+                val Varargs(argExprs) = argsExpr
+                toJsonExpr(jsonPattern, argExprs)
+            </code></pre>
+            <pre data-id="toJsonExpr" style="width: 90%;"><code class="scala" data-trim data-noescape data-line-numbers>
+              def toJsonExpr(ast: Pattern, args: Seq[Expr[Json]])(using Quotes): Expr[Json] =
+                ...
+            </code></pre>
+          </section>
+          <section data-auto-animate>
+            <h3>Compiling the pattern</h3>
+            <pre data-id="toJsonExpr" style="width: 90%;"><code class="scala" data-trim data-noescape data-line-numbers>
+              def toJsonExpr(ast: Pattern, args: Seq[Expr[Json]])(using Quotes): Expr[Json] =
+                def rec(ast: Pattern): Expr[Json] =
+                  ast match
+                    ...
+                rec(ast)
+            </code></pre>
+            <ul>
+              <li>Recursively transform the <code>Pattern</code> AST into an <code>Expr[Json]</code></li>
+            </ul>
+          </section>
+          <section data-auto-animate>
+            <h3>Compiling the pattern</h3>
+            <pre data-id="toJsonExpr" style="width: 90%;"><code class="scala" data-trim data-noescape data-line-numbers="3,4">
+              def toJsonExpr(ast: Pattern, args: Seq[Expr[Json]])(using Quotes): Expr[Json] =
+                def rec(ast: Pattern): Expr[Json] =
+                  ast match
+                    case Pattern.Str(value) => Expr(value)
+                    ...
+                rec(ast)
+            </code></pre>
+            <ul>
+              <li>Use <code>ToExpr[String] to lift the value</code></li>
+            </ul>
+          </section>
+          <section data-auto-animate>
+            <h3>Compiling the pattern</h3>
+            <pre style="height: 430px; width: 90%;" data-id="toJsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="3,5-8">
+              def toJsonExpr(ast: Pattern, args: Seq[Expr[Json]])(using Quotes): Expr[Json] =
+                def rec(ast: Pattern): Expr[Json] =
+                  ast match
+                    ...
+                    case Pattern.Arr(values*) =>
+                      val valueExprs: Seq[Expr[Json]] = values.map(rec)
+                      val valuesExpr: Expr[Seq[Json]] = Varargs(valueExprs)
+                      '{ JsonArray($valuesExpr*) }
+                    ...
+                rec(ast)
+            </code></pre>
+            <ul>
+              <li>Transform each value recursively</li>
+              <li>Create an expression the varargs sequence</li>
+              <li>Instantiate <code>JsonArray</code> with varargs</li>
+            </ul>
+          </section>
+          <section data-auto-animate>
+            <h3>Compiling the pattern</h3>
+            <pre style="height: 510px; width: 90%;" data-id="toJsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="3,5-10">
+              def toJsonExpr(ast: Pattern, args: Seq[Expr[Json]])(using Quotes): Expr[Json] =
+                def rec(ast: Pattern): Expr[Json] =
+                  ast match
+                    ...
+                    case Pattern.Obj(nameValues*) =>
+                      val nameExprValueExprs: Seq[(Expr[String], Expr[Json])]  =
+                        for (name, value) <- nameValues yield (Expr(name), rec(value))
+                      val nameValueExprs: Seq[Expr[(String, Json)]] = nameExprValueExprs.map(Expr.ofTuple)
+                      val nameValuesExpr: Expr[Seq[(String, Json)]] = Varargs(nameValueExprs)
+                      '{ JsonObject($nameValuesExpr*) }
+                    ...
+                rec(ast)
+            </code></pre>
+            <ul>
+              <li>Transform each key and value recursively into expressions</li>
+              <li>Use <code>Expr.ofTuple</code> to create a tuple from expressions</li>
+            </ul>
+          </section>
+          <section data-auto-animate>
+            <h3>Compiling the pattern</h3>
+            <pre data-id="toJsonExpr" style="width: 90%;"><code class="scala" data-trim data-noescape data-line-numbers="2,4,6-7">
+              def toJsonExpr(ast: Pattern, args: Seq[Expr[Json]])(using Quotes): Expr[Json] =
+                val argsIterator = args.iterator
+                def rec(ast: Pattern): Expr[Json] =
+                  ast match
+                    ...
+                    case Pattern.InterpolatedValue =>
+                      argsIterator.next()
+                rec(ast)
+            </code></pre>
+            <ul>
+              <li>Get the i-th interpolated value</li>
+            </ul>
+          </section>
+          <section data-auto-animate>
+            <h3>Compiling the pattern</h3>
+            <pre style="height: 760px; width: 90%;" data-id="toJsonExpr"><code class="scala" data-trim data-noescape data-line-numbers>
+              def toJsonExpr(ast: Pattern, args: Seq[Expr[Json]])(using Quotes): Expr[Json] =
+                val argsIterator = args.iterator
+                def rec(ast: Pattern): Expr[Json] =
+                  ast match
+                    case Pattern.Str(value) => Expr(value)
+                    case Pattern.Arr(values*) =>
+                      val valueExprs: Seq[Expr[Json]] = values.map(rec)
+                      val valuesExpr: Expr[Seq[Json]] = Varargs(valueExprs)
+                      '{ JsonArray($valuesExpr*) }
+                    case Pattern.Obj(nameValues*) =>
+                      val nameExprValueExprs: Seq[(Expr[String], Expr[Json])]  =
+                        for (name, value) <- nameValues yield (Expr(name), rec(value))
+                      val nameValueExprs: Seq[Expr[(String, Json)]] = nameExprValueExprs.map(Expr.ofTuple)
+                      val nameValuesExpr: Expr[Seq[(String, Json)]] = Varargs(nameValueExprs)
+                      '{ JsonObject($nameValuesExpr*) }
+                    case Pattern.InterpolatedValue =>
+                      argsIterator.next()
+                rec(ast)
+            </code></pre>
+          </section>
+        </section>
+
+
+        <section>
+          <section class="red-slide" data-background-color="var(--r-background-color-red-slide)">
+            <h2>Pattern matching</h2>
+            <pre><code class="scala" data-trim data-noescape data-line-numbers>
+              talk match
+                case <span class="hljs-string">json</span>&#8203""<span hidden> </span>" { "name": $name, "speaker": $speaker } """ =>
+                  println(s"$name by $speaker")
+            </code></pre>
+          </section>
+
+          <section data-auto-animate data-auto-animate-id="stringcontext" class="dark-slide" data-background-color="var(--r-background-color-dark-slide)">
+            <h3>scala.StringContext</h3>
+            <div class="two-columns" style="grid-template-columns: 1fr 1fr">
+              <div>
+                  <pre><code class="scala" data-trim>
+                    json" [ $firstTalk, $secondTalk ] "
+                  </code></pre>
+              </div>
+              <div>
+                <pre><code class="scala" data-trim>
+                  case json" [ $firstTalk, $secondTalk ] " =>
+                </code></pre>
+              </div>
+            </div>
+          </section>
+          <section data-auto-animate data-auto-animate-id="stringcontext" class="dark-slide" data-background-color="var(--r-background-color-dark-slide)">
+            <h3>scala.StringContext</h3>
+            <div class="two-columns" style="grid-template-columns: 1fr 1fr">
+              <div>
+                  <pre><code class="scala" data-trim>
+                    json" [ $firstTalk, $secondTalk ] "
+                  </code></pre>
+                  <div>↓</div>
+              </div>
+              <div>
+                <pre><code class="scala" data-trim>
+                  case json" [ $firstTalk, $secondTalk ] " =>
+                </code></pre>
+                <div>↓</div>
+              </div>
+            </div>
+            <pre><code class="scala" data-trim>
+              StringContext(" [ ", ", ", "] ").json(firstTalk, secondTalk)
+            </code></pre>
+          </section>
+          <section data-auto-animate data-auto-animate-id="stringcontext" class="dark-slide" data-background-color="var(--r-background-color-dark-slide)">
+            <h3>scala.StringContext</h3>
+            <pre><code class="scala" data-trim>
+              StringContext(" [ ", ", ", "] ").json(firstTalk, secondTalk)
+            </code></pre>
+            <div class="two-columns" style="grid-template-columns: 1fr 1fr">
+              <div>
+                <div>↓</div>
+                <pre><code class="scala" data-trim>
+                  StringContext(" [ ", ", ", "] ")
+
+                    .json.apply(firstTalk, secondTalk)
+                </code></pre>
+              </div>
+              <div>
+                <div>↓</div>
+                <pre><code class="scala" data-trim>
+                  StringContext(" [ ", ", ", "] ")
+
+                    .json.unapply(firstTalk, secondTalk)
+                </code></pre>
+              </div>
+            </div>
+          </section>
+
+          <section data-auto-animate>
+            <h3>String interpolator macro V2</h3>
+            <pre data-id="JsonStringContext"><code class="scala" data-trim data-noescape data-line-numbers>
+              type JsonStringContext
+
+              extension (sc: scala.StringContext)
+                @compileTimeOnly("...")
+                def json: JsonStringContext = ???
+            </code></pre>
+            <ul>
+              <li>Wrapper over <code>StringContext</code></li>
+            </ul>
+          </section>
+          <section data-auto-animate>
+            <h3>String interpolator macro V2</h3>
+            <pre data-id="JsonStringContext" style="height: 515px;"><code class="scala" data-trim data-noescape data-line-numbers="7,8,11|9,12">
+              type JsonStringContext
+              extension (sc: scala.StringContext)
+                @compileTimeOnly("...")
+                def json: JsonStringContext = ???
+
+              object JsonStringContext:
+                extension (inline jsonSC: JsonStringContext)
+                  inline def apply(inline args: Json*): Json =
+                    ${ jsonExpr('jsonSC, 'args) }
+
+                  inline def unapplySeq(scrutinee: Json): Option[Seq[Json]] =
+                    ${ jsonUnapplySeqExpr('jsonSC, 'scrutinee) }
+            </code></pre>
+          </section>
+
+          <section data-auto-animate>
+            <h3><span data-id="stringContextJsonExampleTitle">Macro implementation</h3>
+            <pre data-id="jsonExpr" style="width: 85%;"><code class="scala" data-trim data-noescape data-line-numbers>
+              def jsonExpr(scExpr: Expr[StringContext],
+                           argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                val jsonPattern: Pattern = parsed(scExpr)
+                val Varargs(argExprs) = argsExpr
+                toJsonExpr(jsonPattern, argExprs)
+            </code></pre>
+          </section>
+          <section data-auto-animate>
+            <h3 data-id="stringContextJsonExampleTitle">Macro implementation V2</h3>
+            <pre data-id="jsonExpr" style="width: 85%;""><code class="scala" data-trim data-noescape data-line-numbers="1,3">
+              def jsonExpr(jsonSCExpr: Expr[JsonStringContext],
+                           argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                val '{ json($scExpr) } = jsonSCExpr
+                val jsonPattern: Pattern = parsed(scExpr)
+                val Varargs(argExprs) = argsExpr
+                toJsonExpr(jsonPattern, argExprs)
+            </code></pre>
+            <ul>
+              <li>Quote pattern to extract the <code>StringContex</code></li>
+            </ul>
+          </section>
+          <section data-auto-animate>
+            <h3><span data-id="stringContextJsonExampleTitle">Macro implementation V2</h3>
+            <pre style="height: 420px; width: 85%;" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="1,2,8,9">
+              def jsonExpr(jsonSCExpr: Expr[JsonStringContext],
+                           argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                val '{ json($scExpr) } = jsonSCExpr
+                val jsonPattern: Pattern = parsed(scExpr)
+                val Varargs(argExprs) = argsExpr
+                toJsonExpr(jsonPattern, argExprs)
+
+              def jsonUnapplySeqExpr(jsonSCExpr: Expr[JsonStringContext],
+                                     scrutinee: Expr[Json])(using Quotes): Expr[Option[Seq[Json]]] =
+                ...
+            </code></pre>
+          </section>
+          <section data-auto-animate>
+            <h3><span data-id="stringContextJsonExampleTitle">Macro implementation V2</h3>
+            <pre style="height: 505px; width: 85%;" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="3,4,10,11">
+              def jsonExpr(jsonSCExpr: Expr[JsonStringContext],
+                           argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                val '{ json($scExpr) } = jsonSCExpr
+                val jsonPattern: Pattern = parsed(scExpr)
+                val Varargs(argExprs) = argsExpr
+                toJsonExpr(jsonPattern, argExprs)
+
+              def jsonUnapplySeqExpr(jsonSCExpr: Expr[JsonStringContext],
+                                     scrutinee: Expr[Json])(using Quotes): Expr[Option[Seq[Json]]] =
+                val '{ json($scExpr) } = jsonSCExpr
+                val jsonPattern: Pattern = parsed(scExpr)
+                ...
+            </code></pre>
+          </section>
+          <section data-auto-animate>
+            <h3><span data-id="stringContextJsonExampleTitle">Macro implementation V2</h3>
+            <pre style="height: 550px; width: 85%;" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="12">
+              def jsonExpr(jsonSCExpr: Expr[JsonStringContext],
+                           argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                val '{ json($scExpr) } = jsonSCExpr
+                val jsonPattern: Pattern = parsed(scExpr)
+                val Varargs(argExprs) = argsExpr
+                toJsonExpr(jsonPattern, argExprs)
+
+              def jsonUnapplySeqExpr(jsonSCExpr: Expr[JsonStringContext],
+                                     scrutinee: Expr[Json])(using Quotes): Expr[Option[Seq[Json]]] =
+                val '{ json($scExpr) } = jsonSCExpr
+                val jsonPattern: Pattern = parsed(scExpr)
+                val jsonPatternExpr: Expr[Pattern] = Expr(jsonPattern)
+                ...
+            </code></pre>
+          </section>
+          <section data-auto-animate>
+            <h3><span data-id="stringContextJsonExampleTitle">Macro implementation V2</h3>
+            <pre style="height: 550px; width: 85%;" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="13">
+              def jsonExpr(jsonSCExpr: Expr[JsonStringContext],
+                           argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                val '{ json($scExpr) } = jsonSCExpr
+                val jsonPattern: Pattern = parsed(scExpr)
+                val Varargs(argExprs) = argsExpr
+                toJsonExpr(jsonPattern, argExprs)
+
+              def jsonUnapplySeqExpr(jsonSCExpr: Expr[JsonStringContext],
+                                     scrutinee: Expr[Json])(using Quotes): Expr[Option[Seq[Json]]] =
+                val '{ json($scExpr) } = jsonSCExpr
+                val jsonPattern: Pattern = parsed(scExpr)
+                val jsonPatternExpr: Expr[Pattern] = Expr(jsonPattern)
+                '{ $jsonPatternExpr.unapplySeq($scrutinee) }
+            </code></pre>
+            <pre><code class="scala" data-trim data-noescape data-line-numbers>
+              enum Pattern:
+                ...
+                def unapplySeq(json: Json): Option[Seq[Json]] = ...
+            </code></pre>
+          </section>
+          <section data-auto-animate>
+            <h3><span data-id="stringContextJsonExampleTitle">Macro implementation V2</h3>
+            <pre style="height: 550px" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers=>
+              def jsonExpr(jsonSCExpr: Expr[JsonStringContext],
+                           argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                val '{ json($scExpr) } = jsonSCExpr
+                val jsonPattern: Pattern = parsed(scExpr)
+                val Varargs(argExprs) = argsExpr
+                toJsonExpr(jsonPattern, argExprs)
+
+              def jsonUnapplySeqExpr(jsonSCExpr: Expr[JsonStringContext],
+                                     scrutinee: Expr[Json])(using Quotes): Expr[Option[Seq[Json]]] =
+                val '{ json($scExpr) } = jsonSCExpr
+                val jsonPattern: Pattern = parsed(scExpr)
+                val jsonPatternExpr: Expr[Pattern] = Expr(jsonPattern)
+                '{ $jsonPatternExpr.unapplySeq($scrutinee) }
+            </code></pre>
+          </section>
+
+          <section data-auto-animate>
+            <h3>Lifting a <code>Pattern</code></h3>
+            <pre data-id="ToExpr" style="width: 80%;"><code class="scala" data-trim data-noescape data-line-numbers>
+              given ToExpr[Pattern] with
+                def apply(pattern: Pattern)(using Quotes): Expr[Pattern] =
+                  ...
+            </code></pre>
+          </section>
+          <section data-auto-animate>
+            <h3>Lifting a <code>Pattern</code></h3>
+            <pre data-id="ToExpr" style="width: 80%;"><code class="scala" data-trim data-noescape data-line-numbers="3,4-5">
+              given ToExpr[Pattern] with
+                def apply(pattern: Pattern)(using Quotes): Expr[Pattern] =
+                  pattern match
+                    case Pattern.InterpolatedValue => '{ Pattern.InterpolatedValue }
+                    ...
+            </code></pre>
+            <ul>
+              <li>Trivial cases with a quoted expressions</li>
+            </ul>
+          </section>
+          <section data-auto-animate>
+            <h3>Lifting a <code>Pattern</code></h3>
+            <pre data-id="ToExpr" style="width: 80%;"><code class="scala" data-trim data-noescape data-line-numbers="3,5">
+              given ToExpr[Pattern] with
+                def apply(pattern: Pattern)(using Quotes): Expr[Pattern] =
+                  pattern match
+                    case Pattern.InterpolatedValue => '{ Pattern.InterpolatedValue }
+                    case Pattern.Str(value) => '{ Pattern.Str(${Expr(value)}) }
+                    ...
+            </code></pre>
+            <ul>
+              <li>Use <code>ToExpr[Boolean]</code>, <code>ToExpr[Double]</code>, and <code>ToExpr[String]</code></li>
+            </ul>
+          </section>
+          <section data-auto-animate>
+            <h3>Lifting a <code>Pattern</code></h3>
+            <pre data-id="ToExpr" style="width: 80%;"><code class="scala" data-trim data-noescape data-line-numbers="3,6-7">
+              given ToExpr[Pattern] with
+                def apply(pattern: Pattern)(using Quotes): Expr[Pattern] =
+                  pattern match
+                    case Pattern.InterpolatedValue => '{ Pattern.InterpolatedValue }
+                    case Pattern.Str(value) => '{ Pattern.Str(${Expr(value)}) }
+                    case Pattern.Arr(patterns*) => '{ Pattern.Arr(${Expr(patterns)}*) }
+                    case Pattern.Obj(namePatterns*) => '{ Pattern.Obj(${Expr(namePatterns)}*) }
+            </code></pre>
+            <ul>
+              <li>Use <code>ToExpr[Seq[T]]</code>, and <code>ToExpr[(T, U)]</code> from Standard library</li>
+              <li>Combined with this <code>ToExpr[Pattern]</code>, and <code>ToExpr[String]</code></li>
+            </ul>
+          </section>
+          <section data-auto-animate>
+            <h3>Lifting a <code>Pattern</code></h3>
+            <pre data-id="ToExpr" style="width: 80%;"><code class="scala" data-trim data-noescape data-line-numbers>
+              given ToExpr[Pattern] with
+                def apply(pattern: Pattern)(using Quotes): Expr[Pattern] =
+                  pattern match
+                    case Pattern.InterpolatedValue => '{ Pattern.InterpolatedValue }
+                    case Pattern.Str(value) => '{ Pattern.Str(${Expr(value)}) }
+                    case Pattern.Arr(patterns*) => '{ Pattern.Arr(${Expr(patterns)}*) }
+                    case Pattern.Obj(namePatterns*) => '{ Pattern.Obj(${Expr(namePatterns)}*) }
+            </code></pre>
+          </section>
+        </section>
+
+        <section>
+          <section class="red-slide" data-background-color="var(--r-background-color-red-slide)">
+            <h3>Refining the types</h3>
+            <pre style="width:90%"><code class="scala" data-trim data-noescape data-line-numbers>
+              val secondTalk =
+                <span class="hljs-string">json</span>&#8203""" { "name": "Implementing a Macro", "speaker": "Nicolas Stucki" } """
+
+              val name: String = secondTalk.name
+            </code></pre>
+          </section>
+
+
+          <section class="dark-slide" data-background-color="var(--r-background-color-dark-slide)">
+            <h3>Refinement types and <code>scala.Selectable</code></h3>
+
+            <pre style="width:70%"><code class="scala" data-trim data-noescape data-line-numbers="1">
+              class JsonObject(...) extends scala.Selectable:
+                ...
+            </code></pre>
+            <pre style="width:70%"><code class="scala" data-trim data-noescape data-line-numbers data-ln-start-from="4">
+              val jsonObject: JsonObject { val name: String } = ...
+
+              val name: String = jsonObject.name
+            </code></pre>
+          </section>
+
+          <section data-auto-animate>
+            <h3>Refined Interpolated Types</h3>
+            <pre data-id="example"><code class="scala" data-trim data-noescape data-line-numbers data-ln-start-from="2">
+              val secondTalk: JsonObject { val name: String; val speaker: String } =
+                <span class="hljs-string">json</span>&#8203""" { "name": Implementing a Macro", "speaker": "Nicolas Stucki" } """
+            </code></pre>
+          </section>
+          <section data-auto-animate>
+            <h3>Refined Interpolated Types</h3>
+            <pre data-id="example"><code class="scala" data-trim data-noescape data-line-numbers>
+              val firstTalk:  JsonObject { val name: String; val speaker: String } = ...
+              val secondTalk: JsonObject { val name: String; val speaker: String } =
+                <span class="hljs-string">json</span>&#8203""" { "name": Implementing a Macro", "speaker": "Nicolas Stucki" } """
+
+              val talks: JsonArray {
+                def apply(idx: Int): JsonObject { val name: String; val speaker: String }
+              } =
+                json" [ $firstTalk, $secondTalk ] "
+            </code></pre>
+          </section>
+
+          <section data-auto-animate>
+            <h3>Transparent macro definition</h3>
+            <pre style="width: 75%;" data-id="extension"><code class="scala" data-trim data-noescape data-line-numbers="1,2">
+              extension (inline jsonSC: JsonStringContext)
+                transparent inline def apply(inline args: Json*): Json =
+                  ${ jsonExpr('jsonSC, 'args) }
+            </code></pre>
+            <ul>
+              <li>Make the macro transparent and refine the type in the implementation</li>
+            </ul>
+          </section>
+          <section data-auto-animate>
+            <h3>Transparent macro definition</h3>
+            <pre style="width: 75%;" data-id="extension"><code class="scala" data-trim data-noescape data-line-numbers="1,5">
+              extension (inline jsonSC: JsonStringContext)
+                transparent inline def apply(inline args: Json*): Json =
+                  ${ jsonExpr('jsonSC, 'args) }
+
+                transparent inline def unapply(inline scrutinee: Json): Option[Tuple] =
+                  ${ jsonUnapplyExpr('jsonSC, 'scrutinee) }
+            </code></pre>
+            <ul>
+              <li>Use transparent <code>unapply</code> instead of <code>unapplySeq</code></li>
+              <li>Refine <code>Tuple</code> into tuple of known size and refined element types</li>
+            </ul>
+          </section>
+
+          <section data-auto-animate>
+            <h3>Macro implementation V2</h3>
+            <pre style="width:74%" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="7">
+              def jsonExpr(jsonSCExpr: Expr[JsonStringContext],
+                           argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                val '{ json($scExpr) } = jsonSCExpr
+                val jsonPattern: Pattern = parsed(scExpr)
+                val Varargs(argExprs) = argsExpr
+                val jsonExpr: Expr[Json] = toJsonExpr(jsonPattern, argExprs)
+                jsonExpr
+            </code></pre>
+            <ul>
+              <li>Can refines result into <code>String</code>, <code>JsonArray</code>, or <code>JsonObject</code></li>
+            </ul>
+          </section>
+          <section data-auto-animate>
+            <h3>Macro implementation V3</h3>
+            <pre style="width:74%" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="7-8">
+              def jsonExpr(jsonSCExpr: Expr[JsonStringContext],
+                           argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                val '{ json($scExpr) } = jsonSCExpr
+                val jsonPattern: Pattern = parsed(scExpr)
+                val Varargs(argExprs) = argsExpr
+                val jsonExpr: Expr[Json] = toJsonExpr(jsonPattern, argExprs)
+                val refinedJsonType: Type[? <: Json] = refinedType(jsonPattern, argExprs)
+                jsonExpr
+            </code></pre>
+            <ul>
+              <li>Refinements of <code>JsonObject { val name: ... }</code></li>
+              <li>Refinements of <code>JsonArray { def apply(idx: Int): ... }</code></li>
+            </ul>
+          </section>
+          <section data-auto-animate>
+            <h3>Macro implementation V3</h3>
+            <pre style="width:74%" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="7-10">
+              def jsonExpr(jsonSCExpr: Expr[JsonStringContext],
+                           argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                val '{ json($scExpr) } = jsonSCExpr
+                val jsonPattern: Pattern = parsed(scExpr)
+                val Varargs(argExprs) = argsExpr
+                val jsonExpr: Expr[Json] = toJsonExpr(jsonPattern, argExprs)
+                val refinedJsonType: Type[? <: Json] = refinedType(jsonPattern, argExprs)
+                refinedJsonType match
+                  case '[t] => '{ $jsonExpr.asInstanceOf[t] }.asExprOf[Json]
+            </code></pre>
+            <ul>
+              <li>Give the name <code>t</code> to the refined type</li>
+              <li>Cast the expression with this refinement</li>
+            </ul>
+          </section>
+
+          <section data-auto-animate>
+            <h3>Computing the refined type</h3>
+            <pre style="width:87%" data-id="refinedType"><code class="scala" data-trim data-noescape data-line-numbers>
+              def refinedType(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Type[? <: Json] =
+                val jsonSchema: Schema = schema(pattern, args)
+                refinedType(jsonSchema)
+            </code></pre>
+            <ul>
+              <li>Compute a <code>Schema</code></li>
+              <li>Convert the schema into a type</li>
+            </ul>
+          </section>
+          <section data-auto-animate>
+            <h3>Computing the refined type</h3>
+            <pre style="width:87%" data-id="refinedType"><code class="scala" data-trim data-noescape data-line-numbers>
+              def refinedType(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Type[? <: Json] =
+                val jsonSchema: Schema = schema(pattern, args)
+                refinedType(jsonSchema)
+            </code></pre>
+            <pre style="width:87%" data-id="Schema"><code class="scala" data-trim data-noescape data-line-numbers>
+              enum Schema:
+                case Value // Json
+                case Str   // String
+                case Arr(elemSchema: Schema)             // JsonArray { def apply(idx: Int): ... }
+                case Obj(nameSchemas: (String, Schema)*) // JsonObject { ... }
+            </code></pre>
+          </section>
+
+          <section data-auto-animate>
+            <h3>Computing the Schema</h3>
+            <pre style="width:75%" data-id="schema"><code class="scala" data-trim data-noescape data-line-numbers>
+              def schema(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Schema =
+                def rec(pattern: Pattern): Schema =
+                  ...
+                rec(pattern)
+            </code></pre>
+          </section>
+          <section data-auto-animate>
+            <h3>Computing the Schema</h3>
+            <pre style="width:75%" data-id="schema"><code class="scala" data-trim data-noescape data-line-numbers="3,4">
+              def schema(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Schema =
+                def rec(pattern: Pattern): Schema =
+                  pattern match
+                    case Pattern.Str(_) => Schema.Str
+                    ...
+                rec(pattern)
+            </code></pre>
+          </section>
+          <section data-auto-animate>
+            <h3>Computing the Schema</h3>
+            <pre style="height: 425px; width:75%" data-id="schema"><code class="scala" data-trim data-noescape data-line-numbers="3,5-8">
+              def schema(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Schema =
+                def rec(pattern: Pattern): Schema =
+                  pattern match
+                    ...
+                    case Pattern.Arr() => Schema.Arr(Schema.Value)
+                    case Pattern.Arr(patterns*) =>
+                      val elementSchema: Schema = patterns.map(rec).reduce(union)
+                      Schema.Arr(elementSchema)
+                    ...
+                rec(pattern)
+            </code></pre>
+          </section>
+          <section data-auto-animate>
+            <h3>Computing the Schema</h3>
+            <pre style="height: 425px; width:75%" data-id="schema"><code class="scala" data-trim data-noescape data-line-numbers="3,5-8">
+              def schema(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Schema =
+                def rec(pattern: Pattern): Schema =
+                  pattern match
+                    ...
+                    case Pattern.Obj(nameValues*) =>
+                      val nameSchemas: Seq[(String, Schema)] =
+                        for (name, value) <- nameValues yield (name, rec(value))
+                      Schema.Obj(nameSchemas*)
+                    ...
+                rec(pattern)
+            </code></pre>
+          </section>
+          <section data-auto-animate>
+            <h3>Computing the Schema</h3>
+            <pre style="width:75%" data-id="schema"><code class="scala" data-trim data-noescape data-line-numbers="3,5">
+              def schema(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Schema =
+                def rec(pattern: Pattern): Schema =
+                  pattern match
+                    ...
+                    case Pattern.InterpolatedValue => Schema.Value
+                rec(pattern)
+            </code></pre>
+          </section>
+          <section data-auto-animate>
+            <h3>Computing the Schema</h3>
+            <pre style="width:75%" data-id="schema"><code class="scala" data-trim data-noescape data-line-numbers="2,4,6-8">
+              def schema(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Schema =
+                val argsIterator = args.iterator
+                def rec(pattern: Pattern): Schema =
+                  pattern match
+                    ...
+                    case Pattern.InterpolatedValue =>
+                      argsIterator.next() match
+                        case '{ type t <: Json; $x : `t` } => schemaOf[t]
+                rec(pattern)
+            </code></pre>
+          </section>
+          <section data-auto-animate>
+            <h3>Computing the Schema</h3>
+            <pre style="height:715px; width:75%" data-id="schema"><code class="scala" data-trim data-noescape data-line-numbers>
+              def schema(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Schema =
+                val argsIterator = args.iterator
+                def rec(pattern: Pattern): Schema =
+                  pattern match
+                    case Pattern.Str(_) => Schema.Str
+                    case Pattern.Arr() => Schema.Arr(Schema.Value)
+                    case Pattern.Arr(patterns*) =>
+                      val elementSchema: Schema = patterns.map(rec).reduce(union)
+                      Schema.Arr(elementSchema)
+                    case Pattern.Obj(nameValues*) =>
+                      val nameSchemas: Seq[(String, Schema)] =
+                        for (name, value) <- nameValues yield (name, rec(value))
+                      Schema.Obj(nameSchemas*)
+                    case Pattern.InterpolatedValue =>
+                      argsIterator.next() match
+                        case '{ type t <: Json; $x : `t` } => schemaOf[t]
+                rec(pattern)
+            </code></pre>
+          </section>
+
+          <section>
+              <!-- TODO -->
+              <h3>TODO</h3>
+              <pre style="width:75%" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers>
+              def schemaOf[T <: Json](using Type[T])(using Quotes): Schema =
+                Type.of[T] match
+                  case '[String] => Schema.Str
+                  case '[JsonArray] => Schema.Arr(Schema.Value) // TODO refine element type
+                  case '[JsonObject] =>
+                    import quotes.reflect.*
+                    def refinements(tpe: TypeRepr): Vector[(String, Schema)] =
+                      tpe match
+                        case Refinement(parent, name, info) =>
+                          val  refinedSchema = schemaOf(using info.asType.asInstanceOf[Type[? <: Json]])
+                          // With SIP-53:
+                          // val  refinedSchema = info.asType match
+                          //   case '[type t <: Json; t] => schemaOf[t]
+                          refinements(parent) :+ (name, refinedSchema)
+                        case _ => Vector()
+                    Schema.Obj(refinements(TypeRepr.of[T].widenTermRefByName)*)
+                  case _ => Schema.Value
+              </code></pre>
+            </section>
+
+            <section data-auto-animate>
+              <h3>From schema to <code>Type[T]</code></h3>
+              <pre style="width:68%" data-id="refinedType"><code class="scala" data-trim data-noescape data-line-numbers>
+                def refinedType(schema: Schema)(using Quotes): Type[? <: Json] =
+                  schema match
+                    ...
+              </code></pre>
+            </section>
+            <section data-auto-animate>
+              <h3>From schema to <code>Type[T]</code></h3>
+              <pre style="width:68%" data-id="refinedType"><code class="scala" data-trim data-noescape data-line-numbers="2-4">
+                def refinedType(schema: Schema)(using Quotes): Type[? <: Json] =
+                  schema match
+                    case Schema.Value => Type.of[Json]
+                    case Schema.Str   => Type.of[String]
+                    ...
+              </code></pre>
+            </section>
+            <section data-auto-animate>
+              <h3>From schema to <code>Type[T]</code></h3>
+              <pre style="width:68%;" data-id="refinedType"><code class="scala" data-trim data-noescape data-line-numbers="2,4-6">
+                def refinedType(schema: Schema)(using Quotes): Type[? <: Json] =
+                  schema match
+                    ...
+                    case Schema.Arr(elemSchema) =>
+                      refinedType(elemSchema) match
+                        case '[t] => Type.of[ JsonArray { def apply(idx: Int): t } ]
+                    ...
+              </code></pre>
+            </section>
+            <section data-auto-animate>
+              <h3>From schema to <code>Type[T]</code></h3>
+              <pre style="width:68%;height:465px;" data-id="refinedType"><code class="scala" data-trim data-noescape data-line-numbers="2,4-11">
+                def refinedType(schema: Schema)(using Quotes): Type[? <: Json] =
+                  schema match
+                    ...
+                    case Schema.Obj(nameSchemas*) =>
+                      import quotes.reflect.*
+                      val refined = nameSchemas.foldLeft(TypeRepr.of[JsonObject]) {
+                        case (acc, (name, schema)) =>
+                          refinedType(schema) match
+                            case '[t] => Refinement(acc, name, TypeRepr.of[t])
+                      }
+                      refined.asType.asInstanceOf[Type[? <: JsonObject]]
+              </code></pre>
+            </section>
+            <section data-auto-animate>
+              <h3>From schema to <code>Type[T]</code></h3>
+              <pre style="width:68%;height:505px;" data-id="refinedType"><code class="scala" data-trim data-noescape data-line-numbers="11-12">
+                def refinedType(schema: Schema)(using Quotes): Type[? <: Json] =
+                  schema match
+                    ...
+                    case Schema.Obj(nameSchemas*) =>
+                      import quotes.reflect.*
+                      val refined = nameSchemas.foldLeft(TypeRepr.of[JsonObject]) {
+                        case (acc, (name, schema)) =>
+                          refinedType(schema) match
+                            case '[t] => Refinement(acc, name, TypeRepr.of[t])
+                      }
+                      refined.asType match
+                        case '[type t <: JsonObject; t] => Type.of[t] // With SIP-53
+              </code></pre>
+            </section>
+            <section data-auto-animate>
+              <h3>From schema to <code>Type[T]</code></h3>
+              <pre style="width:68%;height:630px;" data-id="refinedType"><code class="scala" data-trim data-noescape data-line-numbers>
+                def refinedType(schema: Schema)(using Quotes): Type[? <: Json] =
+                  schema match
+                    case Schema.Value => Type.of[Json]
+                    case Schema.Str   => Type.of[String]
+                    case Schema.Arr(elemSchema) =>
+                      refinedType(elemSchema) match
+                        case '[t] => Type.of[ JsonArray { def apply(idx: Int): t } ]
+                    case Schema.Obj(nameSchemas*) =>
+                      import quotes.reflect.*
+                      val refined = nameSchemas.foldLeft(TypeRepr.of[JsonObject]) {
+                        case (acc, (name, schema)) =>
+                          refinedType(schema) match
+                            case '[t] => Refinement(acc, name, TypeRepr.of[t])
+                      }
+                      refined.asType.asInstanceOf[Type[? <: JsonObject]]
+              </code></pre>
+            </section>
+          </section>
+
+          <section>
+            <section data-auto-animate>
+              <pre style="width:70%" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="6-8">
+                def jsonExpr(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                  val jsonPattern: Pattern = parsed(scExpr)
+                  val argExprs: Seq[Expr[Json]] = argsExpr match
+                    case Varargs(argExprs) => argExprs
+                    case _ =>
+                      quotes.reflect.report.errorAndAbort(
+                        "unpacking string context json args* is not supported"
+                      )
+                  ...
+              </code></pre>
+              <pre style="width:70%" data-id="example"><code class="scala" data-trim data-noescape data-line-numbers>
+                StringContext(" [ ", ", ", "] ").json(firstTalk, secondTalk) // ok
+
+                StringContext(" [ ", ", ", "] ").json(args*)
+                <span style="color:red">^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</span>
+                <span style="color:red">unpacking string context json args* is not supported</code>
+              </code></pre>
+          </section>
+          <section data-auto-animate>
+            <pre style="width:70%" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="6-9">
+              def jsonExpr(scExpr: Expr[StringContext], argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                val jsonPattern: Pattern = parsed(scExpr)
+                val argExprs: Seq[Expr[Json]] = argsExpr match
+                  case Varargs(argExprs) => argExprs
+                  case _ =>
+                    quotes.reflect.report.errorAndAbort(
+                      "unpacking string context json args* is not supported",
+                      argExprs
+                    )
+                ...
+            </code></pre>
+            <pre style="width:70%" data-id="example"><code class="scala" data-trim data-noescape data-line-numbers="3-5">
+              StringContext(" [ ", ", ", "] ").json(firstTalk, secondTalk) // ok
+
+              StringContext(" [ ", ", ", "] ").json(args*)
+                                                    <span style="color:red">^^^^^</span>
+              <span style="color:red">unpacking string context json args* is not supported</code>
+            </code></pre>
+          </section>
+
+          <section>
+            <pre style="width:70%"><code class="scala" data-trim data-noescape data-line-numbers>
+              <span class="hljs-string">json</span>&#8203""" { "name": $name, "speaker" = $speaker } """
+            </code></pre>
+            <pre style="width:70%"><code class="scala" data-trim data-noescape data-line-numbers>
+              <span class="hljs-string">json</span>&#8203""" { "name": $name, "speaker" = $speaker } """
+                    ^^^^^^^^^^^     ^^^^^^^^^^^^^^        ^^^
+                    part 0          part 1                part 2
+            </code></pre>
+            <pre style="width:70%"><code class="scala" data-trim data-noescape data-line-numbers>
+              <span class="hljs-string">json</span>&#8203""" { "name": $name, "speaker" = $speaker } """
+                                                ^
+                                                Location(partIndex = 1, offset = 12)
+            </code></pre>
+            <pre style="width:70%"><code class="scala" data-trim data-noescape>
+              def parsed(stringContextExpr: Expr[StringContext])(using Quotes): Pattern =
+                val stringContext: StringContext = stringContextExpr.valueOrAbort
+                val jsonString: Seq[String] = stringContext.parts.map(scala.StringContext.processEscapes)
+                Parser(jsonString).parse() match
+                  case Success(json) => json
+                  case Error(ParseError(msg, location)) =>
+                    ...
+            </code></pre>
+            <pre style="width:70%"><code class="scala" data-trim data-noescape>
+              class Location(val partIndex: Int, val offset: Int)
+            </code></pre>
+          </section>
+
+          <section>
+            <pre style="width:70%"><code class="scala" data-trim data-noescape>
+              <span class="hljs-string">json</span>&#8203""" { "name": $name, "speaker" = $speaker } """
+                    ^^^^^^^^^^^     ^^^^^^^^^^^^^^        ^^^
+                    part 0          part 1                part 2
+            </code></pre>
+            <pre style="width:70%"><code class="scala" data-trim data-noescape>
+              <span class="hljs-string">json</span>&#8203""" { "name": $name, "speaker" = $speaker } """
+                                                ^
+                                                Location(partIndex = 1, offset = 12)
+            </code></pre>
+            <pre style="width:70%"><code class="scala" data-trim data-noescape>
+              def parsed(stringContextExpr: Expr[StringContext])(using Quotes): Pattern =
+                val stringContext: StringContext = stringContextExpr.valueOrAbort
+                val jsonString: Seq[String] = stringContext.parts.map(scala.StringContext.processEscapes)
+                Parser(jsonString).parse() match
+                  case Success(json) => json
+                  case Error(ParseError(msg, location)) =>
+                    val '{ scala.StringContext(${Varargs(args)}: _*) } = stringContextExpr
+                    import quotes.reflect.*
+                    val sourceFile = stringContextExpr.asTerm.pos.sourceFile
+                    val baseOffset = args(location.partIndex).asTerm.pos.start
+                    val offset = baseOffset + location.offset
+                    report.errorAndAbort(msg, Position(sourceFile, offset, offset + 1))
+            </code></pre>
+            <pre style="width:70%"><code class="scala" data-trim data-noescape>
+              class Location(val partIndex: Int, val offset: Int)
+            </code></pre>
+
+          </section>
+
+        </section>
+
+        <section class="red-slide" data-background-color="var(--r-background-color-red-slide)" data-background-image="images/scala-days-background-3.png" data-background-size="auto 100%" data-background-position="right">
+          <div style="text-align: left; padding-left: 15%;">
+            <div style="text-align: justify">
+              <h2 style="font-size: 2.5em; font-weight: 200; padding-bottom: 0;margin-bottom: -35px;">Scala</h2>
+              <h2 style="font-size: 2.5em; font-weight: 700; padding-bottom: 0;margin-bottom: -15px">Days</h2>
+              <h2 style="font-size: 2.5em; font-weight: 700; letter-spacing:-0.3rem; -webkit-text-stroke: 3px white; color: #00000000">2023</h2>
+            </div>
+            <h2 style="padding-top: 50px; font-size: 3.15rem;">Thank you</h2>
+            <div style="font-size: 0.6em; margin-left: -7em; padding-top: 100px;">https://github.com/nicolasstucki/scala-days-2023</div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+
+
+    <script src="reveal-js/reveal.js"></script>
+    <script src="plugin/zoom/zoom.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script src="plugin/math/math.js"></script>
+    <script>
+      // More info about initialization & config:
+      // - https://revealjs.com/initialization/
+      // - https://revealjs.com/config/
+      Reveal.initialize({
+        width: 1920, height: 1080,
+        minScale: 0.5,
+        // maxScale: 1.0,
+
+        overview: false,
+
+        progress: true,
+        // center: true,
+        hash: true,
+        // slideNumber: true,
+        slideNumber: "c",
+
+        backgroundTransition: 'fade',
+
+        // controls: false,
+        controlsBackArrows: 'hidden',
+
+
+        // Learn about plugins: https://revealjs.com/plugins/
+        plugins: [ RevealHighlight, RevealMath.KaTeX ]
+      });
+      // let lastIndexh = -1;
+      // Reveal.on( 'slidechanged', event => {
+      //   if (lastIndexh != -1 && event.indexh != lastIndexh && event.indexv != 0) {
+      //     Reveal.slide(event.indexh, 0, 0);
+      //   }
+      //    lastIndexh = event.indexh
+      // });
+
+      const cursor = document.querySelector(".custom-cursor");
+      window.addEventListener("keydown", (event) => {
+        if (event.key === 'q') {
+          cursor.classList.remove("laser-unfocus");
+          if (cursor.classList.contains("laser-focus")) {
+            cursor.classList.remove("laser-focus");
+          } else {
+            cursor.classList.add("laser-focus");
+          }
+        } else if (event.key === 'w') {
+          cursor.classList.remove("laser-focus");
+          if (cursor.classList.contains("laser-unfocus")) {
+            cursor.classList.remove("laser-unfocus");
+          } else {
+            cursor.classList.add("laser-unfocus");
+          }
+        } else if (event.code === 'BracketLeft') {
+          const slideNumber = Reveal.getIndices().h;
+          Reveal.slide(slideNumber - 1, 0, Infinity);
+        } else if (event.code === 'BracketRight') {
+          const slideNumber = Reveal.getIndices().h;
+          Reveal.slide(slideNumber + 1, 0, Infinity);
+        }
+      });
+      window.addEventListener("mousemove", (event) => {
+          let x = event.pageX - cursor.offsetWidth / 2,
+              y = event.pageY - cursor.offsetHeight / 2;
+
+          cursor.style.left = `${x}px`;
+          cursor.style.top = `${y}px`;
+      });
+    </script>
+  </body>
+</html>
