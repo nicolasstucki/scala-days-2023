@@ -82,72 +82,10 @@
       .formula {
         padding: 40px
       }
-
-      :root {
-            --cursor-color: 252, 39, 39;
-            --cursor-size: 2em;
-      }
-      .reveal {
-          cursor: none;
-      }
-      .custom-cursor {
-          position: absolute;
-          z-index: 99;
-          top: 0;
-          left: 0;
-
-          width: var(--cursor-size);
-          height: var(--cursor-size);
-
-          border: calc(var(--cursor-size)
-                      /10) solid #fff;
-          border-radius: 50%;
-
-          animation: cursor 800ms infinite
-                  alternate ease-in-out;
-          pointer-events: none;
-          border-color: rgba(var(--cursor-color), 0);
-      }
-      .custom-cursor.laser-focus::before {
-          content: "";
-          display: block;
-          width: calc(var(--cursor-size) / 2);
-          height: calc(var(--cursor-size) / 2);
-
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-
-          background-color: rgba(var(--cursor-color));
-          border: calc(var(--cursor-size) / 10)
-                  solid rgb(var(--cursor-color));
-
-          border-radius: 50%;
-      }
-      .custom-cursor.laser-unfocus::before {
-          content: "";
-          display: block;
-          width: calc(var(--cursor-size) * 2);
-          height: calc(var(--cursor-size) * 0.5);
-
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%) scale(2);
-          border-color: rgba(var(--cursor-color), 0.5);
-          background-color: rgba(var(--cursor-color), 0.2);
-
-          border: calc(var(--cursor-size) / 10)
-                  solid rgb(var(--cursor-color));
-
-          border-radius: 20px;
-      }
     </style>
   </head>
 
   <body>
-    <div class="custom-cursor laser-focus"></div>
     <div class="reveal">
       <div class="slides">
 
@@ -1427,45 +1365,6 @@
 
         // Learn about plugins: https://revealjs.com/plugins/
         plugins: [ RevealHighlight, RevealMath.KaTeX ]
-      });
-      // let lastIndexh = -1;
-      // Reveal.on( 'slidechanged', event => {
-      //   if (lastIndexh != -1 && event.indexh != lastIndexh && event.indexv != 0) {
-      //     Reveal.slide(event.indexh, 0, 0);
-      //   }
-      //    lastIndexh = event.indexh
-      // });
-
-      const cursor = document.querySelector(".custom-cursor");
-      window.addEventListener("keydown", (event) => {
-        if (event.key === 'q') {
-          cursor.classList.remove("laser-unfocus");
-          if (cursor.classList.contains("laser-focus")) {
-            cursor.classList.remove("laser-focus");
-          } else {
-            cursor.classList.add("laser-focus");
-          }
-        } else if (event.key === 'w') {
-          cursor.classList.remove("laser-focus");
-          if (cursor.classList.contains("laser-unfocus")) {
-            cursor.classList.remove("laser-unfocus");
-          } else {
-            cursor.classList.add("laser-unfocus");
-          }
-        } else if (event.code === 'BracketLeft') {
-          const slideNumber = Reveal.getIndices().h;
-          Reveal.slide(slideNumber - 1, 0, Infinity);
-        } else if (event.code === 'BracketRight') {
-          const slideNumber = Reveal.getIndices().h;
-          Reveal.slide(slideNumber + 1, 0, Infinity);
-        }
-      });
-      window.addEventListener("mousemove", (event) => {
-          let x = event.pageX - cursor.offsetWidth / 2,
-              y = event.pageY - cursor.offsetHeight / 2;
-
-          cursor.style.left = `${x}px`;
-          cursor.style.top = `${y}px`;
       });
     </script>
   </body>
