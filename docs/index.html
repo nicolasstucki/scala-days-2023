@@ -1274,7 +1274,7 @@
                 Parser(parts).parse() match
                   case Parsed(pattern) => pattern
                   case ParseError(msg, location) =>
-                    quotes.report.errorAndAbort(msg)
+                    quotes.reflect.report.errorAndAbort(msg)
             </code></pre>
           </section>
 
@@ -1294,7 +1294,7 @@
                   case ParseError(msg, location) =>
                     val '{ scala.StringContext(${Varargs(partExprs)}: _*) } = scExpr
                     val partWithError: Expr[String] = partExprs(location.partIndex)
-                    quotes.report.errorAndAbort(msg, partWithError)
+                    quotes.reflect.report.errorAndAbort(msg, partWithError)
             </code></pre>
           </section>
 
