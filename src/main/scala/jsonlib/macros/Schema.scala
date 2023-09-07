@@ -69,10 +69,12 @@ private object Schema:
         // Version 2: Take into account the statically known type of the interpolated value
         case Pattern.InterpolatedValue =>
           argsIterator.next() match
-            case '{ type t <: Json; $x : `t` } => schemaOf[t]
+            // case '{ type t <: Json; $x : t } => schemaOf[t] // With SIP-53
+            case '{ $x : t } => schemaOf[t]
     rec(pattern)
 
-  private def schemaOf[T <: Json](using Type[T])(using Quotes): Schema =
+  // private def schemaOf[T <: Json](using Type[T])(using Quotes): Schema = // With SIP-53
+  private def schemaOf[T](using Type[T])(using Quotes): Schema =
     Type.of[T] match
       case '[Null] => Schema.Null
       case '[Boolean] => Schema.Bool
@@ -83,11 +85,9 @@ private object Schema:
         val  refinedSchema =
           TypeRepr.of[T].widen match
             case Refinement(parent, "apply", MethodType(_, _, resType)) =>
-              val tpe = resType.asType.asInstanceOf[Type[? <: Json]]
-              // With SIP-53:
-              // val  refinedSchema = resType.asType match
-              //   case '[type t <: Json; t] => schemaOf[t]
-              schemaOf(using tpe)
+              resType.asType match
+                // case '[type t <: Json; t] => schemaOf[t] // With SIP-53
+                case '[t] => schemaOf[t]
             case _ => Schema.Value
         Schema.Arr(refinedSchema)
       case '[JsonObject] =>
@@ -95,10 +95,9 @@ private object Schema:
         def refinements(tpe: TypeRepr): Vector[(String, Schema)] =
           tpe match
             case Refinement(parent, name, info) =>
-              val  refinedSchema = schemaOf(using info.asType.asInstanceOf[Type[? <: Json]])
-              // With SIP-53:
-              // val  refinedSchema = info.asType match
-              //   case '[type t <: Json; t] => schemaOf[t]
+              val  refinedSchema = info.asType match
+                // case '[type t <: Json; t] => schemaOf[t] // With SIP-53
+                case '[t] => schemaOf[t]
               refinements(parent) :+ (name, refinedSchema)
             case _ => Vector()
         Schema.Obj(refinements(TypeRepr.of[T].widen)*)

@@ -1069,7 +1069,7 @@
                     ...
                     case Pattern.InterpolatedValue =>
                       argsIterator.next() match
-                        case '{ type t <: Json; $x : `t` } => schemaOf[t]
+                        case '{ $argExpr : t } => schemaOf[t]
                 rec(pattern)
             </code></pre>
           </section>
@@ -1091,43 +1091,43 @@
                       Schema.Obj(nameSchemas*)
                     case Pattern.InterpolatedValue =>
                       argsIterator.next() match
-                        case '{ type t <: Json; $x : `t` } => schemaOf[t]
+                        case '{ $argExpr : t } => schemaOf[t]
                 rec(pattern)
             </code></pre>
           </section>
 
-          <section>
+          <section data-auto-animate>
               <!-- TODO -->
+              <h3>Extracting information from <code>Type[T]</code></h3>
               <h3>TODO</h3>
-              <pre style="width:75%" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers>
-              def schemaOf[T <: Json](using Type[T])(using Quotes): Schema =
-                Type.of[T] match
-                  case '[String] => Schema.Str
-                  case '[JsonArray] =>
-                    import quotes.reflect.*
-                    val  refinedSchema =
-                      TypeRepr.of[T].widen match
-                        case Refinement(parent, "apply", MethodType(_, _, resType)) =>
-                          val tpe = resType.asType.asInstanceOf[Type[? <: Json]]
-                          // With SIP-53:
-                          // val  refinedSchema = resType.asType match
-                          //   case '[type t <: Json; t] => schemaOf[t]
-                          schemaOf(using tpe)
-                        case _ => Schema.Value
-                    Schema.Arr(refinedSchema)
-                  case '[JsonObject] =>
-                    import quotes.reflect.*
-                    def refinements(tpe: TypeRepr): Vector[(String, Schema)] =
-                      tpe match
-                        case Refinement(parent, name, info) =>
-                          val  refinedSchema = schemaOf(using info.asType.asInstanceOf[Type[? <: Json]])
-                          // With SIP-53:
-                          // val  refinedSchema = info.asType match
-                          //   case '[type t <: Json; t] => schemaOf[t]
-                          refinements(parent) :+ (name, refinedSchema)
-                        case _ => Vector()
-                    Schema.Obj(refinements(TypeRepr.of[T].widen)*)
-                  case _ => Schema.Value
+              <pre data-id="schemaOf" style="width:75%" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers>
+                // private def schemaOf[T <: Json](using Type[T])(using Quotes): Schema = // With SIP-53
+                private def schemaOf[T](using Type[T])(using Quotes): Schema =
+                  Type.of[T] match
+                    case '[Null] => Schema.Null
+                    case '[Boolean] => Schema.Bool
+                    case '[String] => Schema.Str
+                    case '[Double] => Schema.Num
+                    case '[JsonArray] =>
+                      import quotes.reflect.*
+                      val  refinedSchema =
+                        TypeRepr.of[T].widen match
+                          case Refinement(parent, "apply", MethodType(_, _, resType)) =>
+                            resType.asType match
+                              case '[t] => schemaOf[t]
+                          case _ => Schema.Value
+                      Schema.Arr(refinedSchema)
+                    case '[JsonObject] =>
+                      import quotes.reflect.*
+                      def refinements(tpe: TypeRepr): Vector[(String, Schema)] =
+                        tpe match
+                          case Refinement(parent, name, info) =>
+                            val  refinedSchema = info.asType match
+                              case '[t] => schemaOf[t]
+                            refinements(parent) :+ (name, refinedSchema)
+                          case _ => Vector()
+                      Schema.Obj(refinements(TypeRepr.of[T].widen)*)
+                    case _ => Schema.Value
               </code></pre>
             </section>
 
