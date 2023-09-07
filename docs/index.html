@@ -104,36 +104,35 @@
           </div>
         </section>
 
-
-				<section>
-					<h3>Overview</h3>
-          <ul>
-            From the perspective of macro implementation
-          <ul>
-						<li class="fragment">Write a macro string interpolators (small JSON DSL)</li>
-						<li class="fragment">Write a macro extractor using string interpolators</li>
-						<li class="fragment">Transparent macro and type refinements</li>
-						<li class="fragment">Precise error reporting</li>
-					</ul>
-					</ul>
-				</section>
-
         <section>
-					<h3>ECMA-404</h3>
-          <div style="margin-left: 100px;margin-top: 100px;">
+          <section class="red-slide" data-background-color="var(--r-background-color-red-slide)">
+            <h3>Overview</h3>
             <ul>
-              <span style="margin-left: -2em;">JSON value</span>
-              <li><span style="font-style: italic;">object</span>: name/value pairs</li>
-              <li><span style="font-style: italic;">array</span>: sequence of values</li>
-              <li><span style="font-style: italic;">string</span></li>
-              <li class="fragment semi-fade-out" data-fragment-index="1"><span style="font-style: italic;">number</span></li>
-              <li class="fragment semi-fade-out" data-fragment-index="1">literals: true, false , null</li>
+              From the perspective of macro implementation
+            <ul>
+              <li class="fragment">Write a macro string interpolators (small JSON DSL)</li>
+              <li class="fragment">Write a macro extractor using string interpolators</li>
+              <li class="fragment">Transparent macro and type refinements</li>
+              <li class="fragment">Precise error reporting</li>
             </ul>
-          </div>
+            </ul>
+          </section>
 
-        </section>
+          <section>
+            <h3>ECMA-404</h3>
+            <div style="margin-left: 100px;margin-top: 100px;">
+              <ul>
+                <span style="margin-left: -2em;">JSON value</span>
+                <li><span style="font-style: italic;">object</span>: name/value pairs</li>
+                <li><span style="font-style: italic;">array</span>: sequence of values</li>
+                <li><span style="font-style: italic;">string</span></li>
+                <li class="fragment semi-fade-out" data-fragment-index="1"><span style="font-style: italic;">number</span></li>
+                <li class="fragment semi-fade-out" data-fragment-index="1">literals: true, false , null</li>
+              </ul>
+            </div>
 
-        <section>
+          </section>
+
           <section>
             <h3>JSON representation in Scala</h3>
 
@@ -1356,19 +1355,25 @@
         minScale: 0.5,
         // maxScale: 1.0,
 
-        overview: false,
+        // overview: false,
 
         progress: true,
-        // center: true,
+
         hash: true,
-        // slideNumber: true,
-        slideNumber: "c",
 
-        backgroundTransition: 'fade',
+        slideNumber: "h.v",
+        navigationMode: 'linear',
 
-        // controls: false,
+
+        transition: 'fade', // none/fade/slide/convex/concave/zoom
+        backgroundTransition: 'fade', // none/fade/slide/convex/concave/zoom
+        transitionSpeed: 'slow', // default/fast/slow
+
+        controls: false,
         controlsBackArrows: 'hidden',
+        touch: true,
 
+        hideCursorTime: 1000,
 
         // Learn about plugins: https://revealjs.com/plugins/
         plugins: [ RevealHighlight ]
