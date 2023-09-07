@@ -650,17 +650,17 @@
             <h3>String interpolator macro V2</h3>
             <pre data-id="JsonStringContext" style="height: 515px; width: 63%;"><code class="scala" data-trim data-noescape data-line-numbers="7,8,11|9,12">
               type JsonStringContext
+
               extension (sc: scala.StringContext)
                 @compileTimeOnly("...")
                 def json: JsonStringContext = ???
 
-              object JsonStringContext:
-                extension (inline jsonSC: JsonStringContext)
-                  inline def apply(inline args: Json*): Json =
-                    ${ jsonExpr('jsonSC, 'args) }
+              extension (inline jsonSC: JsonStringContext)
+                inline def apply(inline args: Json*): Json =
+                  ${ jsonExpr('jsonSC, 'args) }
 
-                  inline def unapplySeq(scrutinee: Json): Option[Seq[Json]] =
-                    ${ jsonUnapplySeqExpr('jsonSC, 'scrutinee) }
+                inline def unapplySeq(scrutinee: Json): Option[Seq[Json]] =
+                  ${ jsonUnapplySeqExpr('jsonSC, 'scrutinee) }
             </code></pre>
           </section>
 
