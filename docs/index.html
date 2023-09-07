@@ -1099,15 +1099,10 @@
           <section data-auto-animate>
               <!-- TODO -->
               <h3>Extracting information from <code>Type[T]</code></h3>
-              <h3>TODO</h3>
-              <pre data-id="schemaOf" style="width:75%" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers>
-                // private def schemaOf[T <: Json](using Type[T])(using Quotes): Schema = // With SIP-53
+              <pre data-id="schemaOf" style="width:75%;height: 970px;" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers>
                 private def schemaOf[T](using Type[T])(using Quotes): Schema =
                   Type.of[T] match
-                    case '[Null] => Schema.Null
-                    case '[Boolean] => Schema.Bool
                     case '[String] => Schema.Str
-                    case '[Double] => Schema.Num
                     case '[JsonArray] =>
                       import quotes.reflect.*
                       val refinedElementSchema =
