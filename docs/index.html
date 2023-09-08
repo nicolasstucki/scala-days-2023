@@ -251,6 +251,75 @@
             </ul>
           </section>
 
+          <section data-auto-animate class="dark-slide" data-background-color="var(--r-background-color-dark-slide)">
+            <h3>Multi-stage programming</h3>
+            <pre data-id="helloExpr"><code class="scala" data-trim data-line-numbers="1">
+              def helloExpr(nameExpr: Expr[String])(using Quotes): Expr[String] =
+                val hello = '{ "Hello" }
+                val helloName: Expr[String] = '{ ${hello} + " " + ${nameExpr}  }
+                helloName // '{ "Hello" + " " + name  }
+            </code></pre>
+            <ul>
+              <li><code>Expr[T]</code>: Value representing code of type <code>T</code></li>
+            </ul>
+          </section>
+          <section data-auto-animate class="dark-slide" data-background-color="var(--r-background-color-dark-slide)">
+            <h3>Multi-stage programming</h3>
+            <pre data-id="helloExpr"><code class="scala" data-trim data-line-numbers="2">
+              def helloExpr(nameExpr: Expr[String])(using Quotes): Expr[String] =
+                val hello = '{ "Hello" }
+                val helloName: Expr[String] = '{ ${hello} + " " + ${nameExpr}  }
+                helloName // '{ "Hello" + " " + name  }
+            </code></pre>
+            <ul>
+              <li><code>Expr[T]</code>: Value representing code of type <code>T</code></li>
+              <li><code>'{ expr }</code>: Delays the computation of <code>expr</code></li>
+            </ul>
+          </section>
+          <section data-auto-animate class="dark-slide" data-background-color="var(--r-background-color-dark-slide)">
+            <h3>Multi-stage programming</h3>
+            <pre data-id="helloExpr"><code class="scala" data-trim data-line-numbers="3-4">
+              def helloExpr(nameExpr: Expr[String])(using Quotes): Expr[String] =
+                val hello = '{ "Hello" }
+                val helloName: Expr[String] = '{ ${hello} + " " + ${nameExpr}  }
+                helloName // '{ "Hello" + " " + name  }
+            </code></pre>
+            <ul>
+              <li><code>Expr[T]</code>: Value representing code of type <code>T</code></li>
+              <li><code>'{ expr }</code>: Delays the computation of <code>expr</code></li>
+              <li><code>${ expr }</code>: Evaluates <code>expr</code> now and insert the code</li>
+            </ul>
+          </section>
+          <section data-auto-animate class="dark-slide" data-background-color="var(--r-background-color-dark-slide)">
+            <h3>Multi-stage programming</h3>
+            <pre data-id="helloExpr"><code class="scala" data-trim data-line-numbers="2">
+              def helloExpr(nameExpr: Expr[String])(using Quotes): Expr[String] =
+                val hello = Expr("Hello") // '{ "Hello" }
+                val helloName: Expr[String] = '{ ${hello} + " " + ${nameExpr}  }
+                helloName // '{ "Hello" + " " + name  }
+            </code></pre>
+            <ul>
+              <li><code>Expr[T]</code>: Value representing code of type <code>T</code></li>
+              <li><code>'{ expr }</code>: Delays the computation of <code>expr</code></li>
+              <li><code>${ expr }</code>: Evaluates <code>expr</code> now and insert the code</li>
+              <li><code>Expr(value)</code>: Lifts the value into and <code>Expr[T]</code></li>
+            </ul>
+          </section>
+          <section data-auto-animate class="dark-slide" data-background-color="var(--r-background-color-dark-slide)">
+            <h3>Multi-stage programming</h3>
+            <pre data-id="helloExpr"><code class="scala" data-trim data-line-numbers>
+              def helloExpr(nameExpr: Expr[String])(using Quotes): Expr[String] =
+                ...
+
+              inline def hello(name: String): String =
+                ${ helloExpr('name) }
+            </code></pre>
+            <ul>
+              <li><code>${ expr }</code>: Evaluates <code>expr</code> now and insert the code</li>
+              <li>Macro is a <code>${ expr }</code> in an inline method (not in <code>'{...}</code>)</li>
+            </ul>
+          </section>
+
           <section data-auto-animate>
             <h3>Macro definition</h3>
             <pre data-id="jsonExpr" style="width: 89%;"><code class="scala" data-trim data-noescape data-line-numbers>
