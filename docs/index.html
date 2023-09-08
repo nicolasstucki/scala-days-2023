@@ -114,32 +114,33 @@
     <div class="reveal">
       <div class="slides">
 
-        <section data-auto-animate class="red-slide no-water-mark" data-background-color="var(--r-background-color-red-slide)" data-background-image="images/scala-days-background.png">
-          <div style="text-align: left; padding: 200px;">
+        <section>
+          <section data-auto-animate class="red-slide no-water-mark" data-background-color="var(--r-background-color-red-slide)" data-background-image="images/scala-days-background.png">
+            <div style="text-align: left; padding: 200px;">
 
-            <div style="margin-bottom:100px; font-size: 2.5em; letter-spacing:-0.4rem">
-              <span style="font-weight: 200">Scala</span><span style="font-weight: 600">Days</span>
+              <div style="margin-bottom:100px; font-size: 2.5em; letter-spacing:-0.4rem">
+                <span style="font-weight: 200">Scala</span><span style="font-weight: 600">Days</span>
+              </div>
+              <h1 style="font-weight: 600">Implementing a Macro</h1>
+              <h1 style="font-size:2em;">in Scala 3</h1>
+              <div style="padding-top:50px;padding-bottom:50px"></div>
+              <div style="padding-bottom:50px;font-weight: 600;">Nicolas Stucki</div>
+              <div style="font-weight: 500;">LAMP / EPFL</div>
+              <div style="font-size: 0.9em; font-weight: 100; text-align: right;">https://github.com/nicolasstucki/scala-days-2023/</div>
             </div>
-            <h1 style="font-weight: 600">Implementing a Macro</h1>
-            <h1 style="font-size:2em;">in Scala 3</h1>
-            <div style="padding-top:50px;padding-bottom:50px"></div>
-            <div style="padding-bottom:50px;font-weight: 600;">Nicolas Stucki</div>
-            <div style="font-weight: 500;">LAMP / EPFL</div>
-            <div style="font-size: 0.9em; font-weight: 100; text-align: right;">https://github.com/nicolasstucki/scala-days-2023/</div>
-          </div>
-        </section>
+          </section>
 
-        <section class="no-water-mark">
           <section data-auto-animate class="red-slide" data-background-color="var(--r-background-color-red-slide)">
             <h3>Overview</h3>
             <ul>
-              From the perspective of macro implementation
-            <ul>
-              <li class="fragment">Write a macro string interpolators (small JSON DSL)</li>
+              <li style="list-style-type: none">From the perspective of macro implementation</li>
+            <ol>
+              <li class="fragment">Running example: small string interpolator JSON DSL</li>
+              <li class="fragment">Write a macro string interpolators</li>
               <li class="fragment">Write a macro extractor using string interpolators</li>
               <li class="fragment">Transparent macro and type refinements</li>
               <li class="fragment">Precise error reporting</li>
-            </ul>
+            </ol>
             </ul>
           </section>
 
