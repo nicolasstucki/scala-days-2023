@@ -103,7 +103,7 @@ private object Schema:
               refinements(parent) :+ (name, refinedSchema)
             case _ => Vector()
         Schema.Obj(refinements(TypeRepr.of[T].widen)*)
-      case _ => Schema.Value
+      case '[Json] => Schema.Value
 
   def union(schema1: Schema, schema2: Schema): Schema =
     (schema1, schema2) match

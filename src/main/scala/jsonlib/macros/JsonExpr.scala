@@ -12,7 +12,7 @@ private[jsonlib] object JsonExpr:
   def jsonExpr(jsonStringContext: Expr[JsonStringContext], argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
     val json: Pattern =
       jsonStringContext match
-        case '{ jsonlib.json($stringContext) } => parsed(stringContext)
+        case '{ ($stringContext: StringContext).json } => parsed(stringContext)
         case _ => quotes.reflect.report.errorAndAbort("Expected call to extension method `json(StringContext): JsonStringContext`")
     val argExprs: Seq[Expr[Json]] = argsExpr match
       case Varargs(argExprs) => argExprs
@@ -25,7 +25,7 @@ private[jsonlib] object JsonExpr:
 
   def jsonUnapplySeqExpr(jsonStringContext: Expr[JsonStringContext], scrutinee: Expr[Json])(using Quotes): Expr[Option[Seq[Json]]] =
     jsonStringContext match
-      case '{ jsonlib.json($stringContext) } =>
+      case '{ ($stringContext: StringContext).json } =>
         val jsonPattern: Pattern = parsed(stringContext)
         // Exercise: inline the scrutinee, analyze its type and check if it could match the pattern. Warn if not.
         // Exercise: partially evaluate the pattern matching
