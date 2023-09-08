@@ -943,7 +943,7 @@
                 val jsonPattern: Pattern = parsed(scExpr)
                 val Varargs(argExprs) = argsExpr
                 val jsonExpr: Expr[Json] = toJsonExpr(jsonPattern, argExprs)
-                val refinedJsonType: Type[? <: Json] = refinedType(jsonPattern, argExprs)
+                val refinedJsonType: Type[?] = refinedType(jsonPattern, argExprs)
                 jsonExpr
             </code></pre>
             <ul>
@@ -960,7 +960,7 @@
                 val jsonPattern: Pattern = parsed(scExpr)
                 val Varargs(argExprs) = argsExpr
                 val jsonExpr: Expr[Json] = toJsonExpr(jsonPattern, argExprs)
-                val refinedJsonType: Type[? <: Json] = refinedType(jsonPattern, argExprs)
+                val refinedJsonType: Type[?] = refinedType(jsonPattern, argExprs)
                 refinedJsonType match
                   case '[t] => '{ $jsonExpr.asInstanceOf[t] }.asExprOf[Json]
             </code></pre>
@@ -973,9 +973,9 @@
           <section data-auto-animate>
             <h3>Computing the refined type</h3>
             <pre style="width:87%" data-id="refinedType"><code class="scala" data-trim data-noescape data-line-numbers>
-              def refinedType(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Type[? <: Json] =
+              def refinedType(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Type[?] =
                 val jsonSchema: Schema = schema(pattern, args)
-                refinedType(jsonSchema)
+                schemaToType(jsonSchema)
             </code></pre>
             <ul>
               <li>Compute a <code>Schema</code></li>
@@ -985,9 +985,9 @@
           <section data-auto-animate>
             <h3>Computing the refined type</h3>
             <pre style="width:87%" data-id="refinedType"><code class="scala" data-trim data-noescape data-line-numbers>
-              def refinedType(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Type[? <: Json] =
+              def refinedType(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Type[?] =
                 val jsonSchema: Schema = schema(pattern, args)
-                refinedType(jsonSchema)
+                schemaToType(jsonSchema)
             </code></pre>
             <pre style="width:87%" data-id="Schema"><code class="scala" data-trim data-noescape data-line-numbers>
               enum Schema:
@@ -1072,46 +1072,77 @@
                         case '{ $argExpr : t } => schemaOf[t]
                 rec(pattern)
             </code></pre>
-          </section>
-          <section data-auto-animate>
-            <h3>Computing the Schema</h3>
-            <pre style="height:715px; width:75%" data-id="schema"><code class="scala" data-trim data-noescape data-line-numbers>
-              def schema(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Schema =
-                val argsIterator = args.iterator
-                def rec(pattern: Pattern): Schema =
-                  pattern match
-                    case Pattern.Str(_) => Schema.Str
-                    case Pattern.Arr() => Schema.Arr(Schema.Value)
-                    case Pattern.Arr(patterns*) =>
-                      val elementSchema: Schema = patterns.map(rec).reduce(union)
-                      Schema.Arr(elementSchema)
-                    case Pattern.Obj(nameValues*) =>
-                      val nameSchemas: Seq[(String, Schema)] =
-                        for (name, value) <- nameValues yield (name, rec(value))
-                      Schema.Obj(nameSchemas*)
-                    case Pattern.InterpolatedValue =>
-                      argsIterator.next() match
-                        case '{ $argExpr : t } => schemaOf[t]
-                rec(pattern)
+            <pre data-id="schemaOf" style="width:75%;" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers>
+              private def schemaOf[T](using Type[T])(using Quotes): Schema =
+                ...
             </code></pre>
           </section>
 
           <section data-auto-animate>
-              <!-- TODO -->
+            <h3>Extracting information from <code>Type[T]</code></h3>
+            <pre data-id="schemaOf" style="width:75%;" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers>
+              private def schemaOf[T](using Type[T])(using Quotes): Schema =
+                ...
+            </code></pre>
+          </section>
+
+          <section data-auto-animate>
+            <h3>Extracting information from <code>Type[T]</code></h3>
+            <pre data-id="schemaOf" style="width:75%;" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers>
+              private def schemaOf[T](using Type[T])(using Quotes): Schema =
+                Type.of[T] match
+                  ...
+            </code></pre>
+            <ul>
+              <li><code>Type[T]</code>: Runtime representation of <code>T</code></li>
+              <li><code>Type.of[T]</code>: Construct <code>Type[T]</code></li>
+              <ul>
+                <li>Statically known type</li>
+                <li>Given implicitly</li>
+              </ul>
+            </ul>
+          </section>
+          <section data-auto-animate>
+            <h3>Extracting information from <code>Type[T]</code></h3>
+            <pre data-id="schemaOf" style="width:75%;" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers>
+              private def schemaOf[T](using Type[T])(using Quotes): Schema =
+                Type.of[T] match
+                  case '[String] => Schema.Str
+                  ...
+            </code></pre>
+            <ul>
+              <li><code>case '[T] =></code> : Matches the type type <code>T</code></li>
+            </ul>
+          </section>
+          <section data-auto-animate>
               <h3>Extracting information from <code>Type[T]</code></h3>
-              <pre data-id="schemaOf" style="width:75%;height: 970px;" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers>
+              <pre data-id="schemaOf" style="width:75%;height: 550px;" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="4-5|7-8|9-10|6,12">
                 private def schemaOf[T](using Type[T])(using Quotes): Schema =
                   Type.of[T] match
-                    case '[String] => Schema.Str
+                    ...
                     case '[JsonArray] =>
                       import quotes.reflect.*
-                      val refinedElementSchema =
+                      val refinedElementSchema: Schema =
                         TypeRepr.of[T].widen match
                           case Refinement(parent, "apply", MethodType(_, _, resType)) =>
                             resType.asType match
                               case '[t] => schemaOf[t]
                           case _ => Schema.Value
                       Schema.Arr(refinedElementSchema)
+                    ...
+              </code></pre>
+              <ul>
+                <li>Use reflection API</li>
+                <li><code>TypeRepr.of[T]</code>: Structured representation of the type <code>T</code></li>
+                <li><code>asType</code>: Convert <code>TypeRepr</code> into <code>Type[?]</code></li>
+              </ul>
+            </section>
+          <section data-auto-animate>
+              <h3>Extracting information from <code>Type[T]</code></h3>
+              <pre data-id="schemaOf" style="width:75%;height: 590px;" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="4-13">
+                private def schemaOf[T](using Type[T])(using Quotes): Schema =
+                  Type.of[T] match
+                    ...
                     case '[JsonObject] =>
                       import quotes.reflect.*
                       def refinements(tpe: TypeRepr): Vector[(String, Schema)] =
@@ -1122,22 +1153,36 @@
                             refinements(parent) :+ (name, refinedSchema)
                           case _ => Vector()
                       Schema.Obj(refinements(TypeRepr.of[T].widen)*)
+                    ...
+              </code></pre>
+            </section>
+          <section data-auto-animate>
+              <h3>Extracting information from <code>Type[T]</code></h3>
+              <pre data-id="schemaOf" style="width:75%" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers>
+                private def schemaOf[T](using Type[T])(using Quotes): Schema =
+                  Type.of[T] match
+                    ...
                     case _ => Schema.Value
               </code></pre>
             </section>
 
             <section data-auto-animate>
               <h3>From schema to <code>Type[T]</code></h3>
+              <pre style="width:87%" data-id="refinedType"><code class="scala" data-trim data-noescape data-line-numbers="1,3">
+                def refinedType(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Type[?] =
+                  val jsonSchema: Schema = schema(pattern, args)
+                  schemaToType(jsonSchema)
+              </code></pre>
               <pre style="width:68%" data-id="refinedType"><code class="scala" data-trim data-noescape data-line-numbers>
-                def refinedType(schema: Schema)(using Quotes): Type[? <: Json] =
-                  schema match
-                    ...
+                def schemaToType(schema: Schema)(using Quotes): Type[?] =
+                  ...
               </code></pre>
             </section>
+
             <section data-auto-animate>
               <h3>From schema to <code>Type[T]</code></h3>
               <pre style="width:68%" data-id="refinedType"><code class="scala" data-trim data-noescape data-line-numbers="2-4">
-                def refinedType(schema: Schema)(using Quotes): Type[? <: Json] =
+                def schemaToType(schema: Schema)(using Quotes): Type[?] =
                   schema match
                     case Schema.Value => Type.of[Json]
                     case Schema.Str   => Type.of[String]
@@ -1147,7 +1192,7 @@
             <section data-auto-animate>
               <h3>From schema to <code>Type[T]</code></h3>
               <pre style="width:68%;" data-id="refinedType"><code class="scala" data-trim data-noescape data-line-numbers="2,4-6">
-                def refinedType(schema: Schema)(using Quotes): Type[? <: Json] =
+                def schemaToType(schema: Schema)(using Quotes): Type[?] =
                   schema match
                     ...
                     case Schema.Arr(elemSchema) =>
@@ -1159,7 +1204,7 @@
             <section data-auto-animate>
               <h3>From schema to <code>Type[T]</code></h3>
               <pre style="width:68%;height:465px;" data-id="refinedType"><code class="scala" data-trim data-noescape data-line-numbers="2,4-11">
-                def refinedType(schema: Schema)(using Quotes): Type[? <: Json] =
+                def schemaToType(schema: Schema)(using Quotes): Type[?] =
                   schema match
                     ...
                     case Schema.Obj(nameSchemas*) =>
@@ -1169,30 +1214,14 @@
                           refinedType(schema) match
                             case '[t] => Refinement(acc, name, TypeRepr.of[t])
                       }
-                      refined.asType.asInstanceOf[Type[? <: JsonObject]]
+                      refined.asType
               </code></pre>
             </section>
-            <section data-auto-animate>
-              <h3>From schema to <code>Type[T]</code></h3>
-              <pre style="width:68%;height:505px;" data-id="refinedType"><code class="scala" data-trim data-noescape data-line-numbers="11-12">
-                def refinedType(schema: Schema)(using Quotes): Type[? <: Json] =
-                  schema match
-                    ...
-                    case Schema.Obj(nameSchemas*) =>
-                      import quotes.reflect.*
-                      val refined = nameSchemas.foldLeft(TypeRepr.of[JsonObject]) {
-                        case (acc, (name, schema)) =>
-                          refinedType(schema) match
-                            case '[t] => Refinement(acc, name, TypeRepr.of[t])
-                      }
-                      refined.asType match
-                        case '[type t <: JsonObject; t] => Type.of[t] // With SIP-53
-              </code></pre>
-            </section>
+
             <section data-auto-animate>
               <h3>From schema to <code>Type[T]</code></h3>
               <pre style="width:68%;height:630px;" data-id="refinedType"><code class="scala" data-trim data-noescape data-line-numbers>
-                def refinedType(schema: Schema)(using Quotes): Type[? <: Json] =
+                def schemaToType(schema: Schema)(using Quotes): Type[?] =
                   schema match
                     case Schema.Value => Type.of[Json]
                     case Schema.Str   => Type.of[String]
@@ -1206,7 +1235,7 @@
                           refinedType(schema) match
                             case '[t] => Refinement(acc, name, TypeRepr.of[t])
                       }
-                      refined.asType.asInstanceOf[Type[? <: JsonObject]]
+                      refined.asType
               </code></pre>
             </section>
           </section>

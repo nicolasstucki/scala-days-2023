@@ -19,25 +19,27 @@ private enum Schema:
 
 private object Schema:
 
-  def refinedType(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Type[? <: Json] =
+  // def refinedType(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Type[? <: Json] = // With SIP-53
+  def refinedType(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Type[?] =
     val jsonSchema: Schema = schema(pattern, args)
-    refinedType(jsonSchema)
+    schemaToType(jsonSchema)
 
-  private def refinedType(schema: Schema)(using Quotes): Type[? <: Json] =
+  // private def schemaToType(schema: Schema)(using Quotes): Type[? <: Json] = // With SIP-53
+  private def schemaToType(schema: Schema)(using Quotes): Type[?] =
     schema match
       case Schema.Value => Type.of[Json]
       case Schema.Obj(nameSchemas*) =>
         import quotes.reflect.*
         val refined = nameSchemas.foldLeft(TypeRepr.of[JsonObject]) { case (acc, (name, schema)) =>
-          refinedType(schema) match
+          schemaToType(schema) match
             case '[t] => Refinement(acc, name, TypeRepr.of[t])
         }
-        refined.asType.asInstanceOf[Type[? <: JsonObject]]
+        refined.asType
         // With SIP-53:
         // refined.asType match
         //   case '[type t <: JsonObject; t] => Type.of[t]
       case Schema.Arr(elemSchema) =>
-        refinedType(elemSchema) match
+        schemaToType(elemSchema) match
           case '[t] => Type.of[ JsonArray { def apply(idx: Int): t } ]
       case Schema.Str => Type.of[String]
       case Schema.Num => Type.of[Double]
