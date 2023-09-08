@@ -203,9 +203,7 @@
 
         <section>
           <section class="red-slide" data-background-color="var(--r-background-color-red-slide)">
-
-            <h2>JSON String interpolator</h2>
-
+            <h2>String interpolator macro</h2>
             <pre><code class="scala" data-trim data-noescape data-line-numbers>
               val firstTalk: Json =
                 <span class="hljs-string">json</span>&#8203""" { "name": "Resource anagement Made Easy", "speaker": "Julien Truffaut" } """
@@ -214,7 +212,6 @@
               val talks: Json =
                 json" [ $firstTalk, $secondTalk ] "
             </code></pre>
-
           </section>
 
           <section class="dark-slide" data-background-color="var(--r-background-color-dark-slide)">
@@ -560,12 +557,26 @@
                 rec(ast)
             </code></pre>
           </section>
+
+          <section class="red-slide" data-background-color="var(--r-background-color-red-slide)">
+            <h4>Now we know how to<h4>
+            <h4>define string interpolator macros</h4>
+            <pre><code class="scala" data-trim data-noescape data-line-numbers>
+              val firstTalk: Json =
+                <span class="hljs-string">json</span>&#8203""" { "name": "Resource anagement Made Easy", "speaker": "Julien Truffaut" } """
+              val secondTalk: Json =
+                <span class="hljs-string">json</span>&#8203""" { "name": Implementing a Macro", "speaker": "Nicolas Stucki" } """
+              val talks: Json =
+                json" [ $firstTalk, $secondTalk ] "
+            </code></pre>
+          </section>
+
         </section>
 
 
         <section>
           <section class="red-slide" data-background-color="var(--r-background-color-red-slide)">
-            <h2>Pattern matching</h2>
+            <h2>String interpolator macro</h2>
             <pre><code class="scala" data-trim data-noescape data-line-numbers>
               talk match
                 case <span class="hljs-string">json</span>&#8203""<span hidden> </span>" { "name": $name, "speaker": $speaker } """ =>
@@ -843,11 +854,20 @@
                     case Pattern.Obj(namePatterns*) => '{ Pattern.Obj(${Expr(namePatterns)}*) }
             </code></pre>
           </section>
+          <section class="red-slide" data-background-color="var(--r-background-color-red-slide)">
+            <h4>Now we know how to<h4>
+            <h4>define string interpolator extractor macros</h4>
+            <pre><code class="scala" data-trim data-noescape data-line-numbers>
+              talk match
+                case <span class="hljs-string">json</span>&#8203""<span hidden> </span>" { "name": $name, "speaker": $speaker } """ =>
+                  println(s"$name by $speaker")
+            </code></pre>
+          </section>
         </section>
 
         <section>
           <section class="red-slide" data-background-color="var(--r-background-color-red-slide)">
-            <h3>Refining the types</h3>
+            <h2>Refining the types</h2>
             <pre style="width:90%"><code class="scala" data-trim data-noescape data-line-numbers>
               val secondTalk =
                 <span class="hljs-string">json</span>&#8203""" { "name": "Implementing a Macro", "speaker": "Nicolas Stucki" } """
@@ -855,7 +875,6 @@
               val name: String = secondTalk.name
             </code></pre>
           </section>
-
 
           <section class="dark-slide" data-background-color="var(--r-background-color-dark-slide)">
             <h3>Refinement types and <code>scala.Selectable</code></h3>
@@ -1238,6 +1257,16 @@
                       refined.asType
               </code></pre>
             </section>
+            <section class="red-slide" data-background-color="var(--r-background-color-red-slide)">
+              <h4>Now we know how to<h4>
+              <h4>use type refinements in macros</h4>
+              <pre style="width:90%"><code class="scala" data-trim data-noescape data-line-numbers>
+                val secondTalk =
+                  <span class="hljs-string">json</span>&#8203""" { "name": "Implementing a Macro", "speaker": "Nicolas Stucki" } """
+
+                val name: String = secondTalk.name
+              </code></pre>
+            </section>
           </section>
 
           <section>
@@ -1348,6 +1377,17 @@
                     report.errorAndAbort(msg, Position(sourceFile, offset, offset + 1))
             </code></pre>
           </section>
+
+          <section data-auto-animate class="red-slide" data-background-color="var(--r-background-color-red-slide)">
+            <h4>Now we know how to<h4>
+            <h4>report errors in string interpolators</h4>
+            <pre style="width:70%" data-id="example"><code class="scala" data-trim data-noescape data-line-numbers>
+              json""" { "name": $name, "speaker" = $speaker } """
+                                                 <span style="color:#ff5e5e">^</span>
+                                                 <span style="color:#ff5e5e">expected `:` but found `=`</span>
+            </code></pre>
+          </section>
+
         </section>
 
 
