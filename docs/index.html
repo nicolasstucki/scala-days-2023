@@ -86,6 +86,27 @@
       .formula {
         padding: 40px
       }
+      .water-mark {
+        text-align: justify;
+        position: fixed;
+        top: 1em;
+        right: 1em;
+        color: var(--r-heading-color);
+        font-size: 1.5em;
+      }
+      .red-slide > .water-mark  {
+        color: white;
+      }
+      .dark-slide > .water-mark  {
+        color: white;
+      }
+      .water-mark-scala {
+        font-weight: 200;
+        margin-bottom: -25px;
+      }
+      .water-mark-days {
+        font-weight: 700;
+      }
     </style>
   </head>
 
@@ -93,7 +114,7 @@
     <div class="reveal">
       <div class="slides">
 
-        <section class="red-slide" data-background-color="var(--r-background-color-red-slide)" data-background-image="images/scala-days-background.png">
+        <section data-auto-animate class="red-slide no-water-mark" data-background-color="var(--r-background-color-red-slide)" data-background-image="images/scala-days-background.png">
           <div style="text-align: left; padding: 200px;">
 
             <div style="margin-bottom:100px; font-size: 2.5em; letter-spacing:-0.4rem">
@@ -108,8 +129,8 @@
           </div>
         </section>
 
-        <section>
-          <section class="red-slide" data-background-color="var(--r-background-color-red-slide)">
+        <section class="no-water-mark">
+          <section data-auto-animate class="red-slide" data-background-color="var(--r-background-color-red-slide)">
             <h3>Overview</h3>
             <ul>
               From the perspective of macro implementation
@@ -122,7 +143,7 @@
             </ul>
           </section>
 
-          <section>
+          <section data-auto-animate>
             <h3>ECMA-404</h3>
             <div style="margin-left: 100px;margin-top: 100px;">
               <ul>
@@ -137,7 +158,7 @@
 
           </section>
 
-          <section>
+          <section data-auto-animate>
             <h3>JSON representation in Scala</h3>
 
             <ul>
@@ -201,7 +222,7 @@
           </section>
         </section>
 
-        <section>
+        <section class="no-water-mark">
           <section class="red-slide" data-background-color="var(--r-background-color-red-slide)">
             <h2>String interpolator macro</h2>
             <pre><code class="scala" data-trim data-noescape data-line-numbers>
@@ -574,7 +595,7 @@
         </section>
 
 
-        <section>
+        <section class="no-water-mark">
           <section class="red-slide" data-background-color="var(--r-background-color-red-slide)">
             <h2>String interpolator macro</h2>
             <pre><code class="scala" data-trim data-noescape data-line-numbers>
@@ -865,7 +886,7 @@
           </section>
         </section>
 
-        <section>
+        <section class="no-water-mark">
           <section class="red-slide" data-background-color="var(--r-background-color-red-slide)">
             <h2>Refining the types</h2>
             <pre style="width:90%"><code class="scala" data-trim data-noescape data-line-numbers>
@@ -1267,9 +1288,9 @@
                 val name: String = secondTalk.name
               </code></pre>
             </section>
-          </section>
+        </section>
 
-          <section>
+        <section class="no-water-mark">
             <section class="red-slide" data-background-color="var(--r-background-color-red-slide)">
               <h2>Precise error reporting</h2>
               <pre style="width:70%"><code class="scala" data-trim data-noescape data-line-numbers>
@@ -1390,10 +1411,9 @@
 
         </section>
 
-
-        <section class="red-slide" data-background-color="var(--r-background-color-red-slide)" data-background-image="images/scala-days-background-3.png" data-background-size="auto 100%" data-background-position="right">
+        <section data-auto-animate class="red-slide no-water-mark" data-background-color="var(--r-background-color-red-slide)" data-background-image="images/scala-days-background-3.png" data-background-size="auto 100%" data-background-position="right">
           <div style="text-align: left; padding-left: 15%;">
-            <div style="text-align: justify">
+            <div style="text-align: justify" data-id="water-mark">
               <h2 style="font-size: 2.5em; font-weight: 200; padding-bottom: 0;margin-bottom: -35px;">Scala</h2>
               <h2 style="font-size: 2.5em; font-weight: 700; padding-bottom: 0;margin-bottom: -15px">Days</h2>
               <h2 style="font-size: 2.5em; font-weight: 700; letter-spacing:-0.3rem; -webkit-text-stroke: 3px white; color: #00000000">2023</h2>
@@ -1446,6 +1466,25 @@
         // Learn about plugins: https://revealjs.com/plugins/
         plugins: [ RevealHighlight ]
       });
+
+      for (section of document.getElementsByTagName("section")) {
+        if (!section.classList.contains("no-water-mark")) {
+          let waterMark = document.createElement("div");
+          waterMark.classList.add("water-mark");
+          waterMark.setAttribute("data-id", "water-mark");
+          let scalaNode = document.createElement("div");
+          scalaNode.classList.add("water-mark-scala");
+          scalaNode.appendChild(document.createTextNode("Scala"));
+          scalaNode.setAttribute("data-id", "water-mark-scala");
+          let daysNode = document.createElement("div");
+          daysNode.classList.add("water-mark-days");
+          daysNode.appendChild(document.createTextNode("Days"));
+          daysNode.setAttribute("data-id", "water-mark-days");
+          waterMark.appendChild(scalaNode);
+          waterMark.appendChild(daysNode);
+          section.appendChild(waterMark);
+        }
+      }
     </script>
   </body>
 </html>
