@@ -1326,7 +1326,7 @@
                 private def schemaOf[T](using Type[T])(using Quotes): Schema =
                   Type.of[T] match
                     ...
-                    case '[Json] => Schema.Value
+                    case _ => Schema.Value
               </code></pre>
             </section>
 
