@@ -1016,14 +1016,14 @@
           </section>
 
           <section data-auto-animate>
-            <h3>Refined Interpolated Types</h3>
+            <h3>Refined interpolated types</h3>
             <pre data-id="example"><code class="scala" data-trim data-noescape data-line-numbers data-ln-start-from="2">
               val secondTalk: JsonObject { val name: String; val speaker: String } =
                 <span class="hljs-string">json</span>&#8203""" { "name": Implementing a Macro", "speaker": "Nicolas Stucki" } """
             </code></pre>
           </section>
           <section data-auto-animate>
-            <h3>Refined Interpolated Types</h3>
+            <h3>Refined interpolated types</h3>
             <pre data-id="example"><code class="scala" data-trim data-noescape data-line-numbers>
               val firstTalk:  JsonObject { val name: String; val speaker: String } = ...
               val secondTalk: JsonObject { val name: String; val speaker: String } =
@@ -1179,7 +1179,7 @@
           </section>
 
           <section data-auto-animate>
-            <h3>Computing the Schema</h3>
+            <h3>Computing the <code>Schema</code></h3>
             <pre style="width:75%" data-id="schema"><code class="scala" data-trim data-noescape data-line-numbers>
               def schema(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Schema =
                 def rec(pattern: Pattern): Schema =
@@ -1188,7 +1188,7 @@
             </code></pre>
           </section>
           <section data-auto-animate>
-            <h3>Computing the Schema</h3>
+            <h3>Computing the <code>Schema</code></h3>
             <pre style="width:75%" data-id="schema"><code class="scala" data-trim data-noescape data-line-numbers="3,4">
               def schema(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Schema =
                 def rec(pattern: Pattern): Schema =
@@ -1199,7 +1199,7 @@
             </code></pre>
           </section>
           <section data-auto-animate>
-            <h3>Computing the Schema</h3>
+            <h3>Computing the <code>Schema</code></h3>
             <pre style="height: 425px; width:75%" data-id="schema"><code class="scala" data-trim data-noescape data-line-numbers="3,5-8">
               def schema(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Schema =
                 def rec(pattern: Pattern): Schema =
@@ -1214,7 +1214,7 @@
             </code></pre>
           </section>
           <section data-auto-animate>
-            <h3>Computing the Schema</h3>
+            <h3>Computing the <code>Schema</code></h3>
             <pre style="height: 425px; width:75%" data-id="schema"><code class="scala" data-trim data-noescape data-line-numbers="3,5-8">
               def schema(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Schema =
                 def rec(pattern: Pattern): Schema =
@@ -1229,7 +1229,7 @@
             </code></pre>
           </section>
           <section data-auto-animate>
-            <h3>Computing the Schema</h3>
+            <h3>Computing the <code>Schema</code></h3>
             <pre style="width:75%" data-id="schema"><code class="scala" data-trim data-noescape data-line-numbers="3,5">
               def schema(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Schema =
                 def rec(pattern: Pattern): Schema =
@@ -1240,7 +1240,7 @@
             </code></pre>
           </section>
           <section data-auto-animate>
-            <h3>Computing the Schema</h3>
+            <h3>Computing the <code>Schema</code></h3>
             <pre style="width:75%" data-id="schema"><code class="scala" data-trim data-noescape data-line-numbers="2,4,6-8">
               def schema(pattern: Pattern, args: Seq[Expr[Json]])(using Quotes): Schema =
                 val argsIterator = args.iterator
