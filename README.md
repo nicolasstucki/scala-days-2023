@@ -1,4 +1,4 @@
-## Scala Days 2023 - Macro implementation
+## Scala Days 2023 - Implementing a Macro in Scala 3
 
 
 ### Scala Days Presentation
