@@ -133,19 +133,20 @@
           <section data-auto-animate class="red-slide" data-background-color="var(--r-background-color-red-slide)">
             <h3>Overview</h3>
             <ul>
-              <li style="list-style-type: none">From the perspective of macro implementation</li>
-            <ol>
-              <li class="fragment">Running example: small string interpolator JSON DSL</li>
-              <li class="fragment">Write a macro string interpolators</li>
-              <li class="fragment">Write a macro extractor using string interpolators</li>
-              <li class="fragment">Transparent macro and type refinements</li>
-              <li class="fragment">Precise error reporting</li>
-            </ol>
+              <li style="list-style-type: none">Practical walkthrough of a macro implementation</li>
+              <ol>
+                <li class="fragment">Running example: string interpolator for JSON DSL</li>
+                <li class="fragment">Implement a string interpolator as a macro</li>
+                <li class="fragment">Implement a string interpolator extractor as a macro</li>
+                <li class="fragment">Use transparent macro and type refinements</li>
+                <li class="fragment">Precise error reporting on string interpolators</li>
+              </ol>
+              <li class="fragment" style="list-style-type: none">GitHub project (link + QR at the end)</li>
             </ul>
           </section>
 
           <section data-auto-animate>
-            <h3>ECMA-404</h3>
+            <h3>JSON specification (ECMA-404)</h3>
             <div style="margin-left: 100px;margin-top: 100px;">
               <ul>
                 <span style="margin-left: -2em;">JSON value</span>
@@ -167,12 +168,10 @@
               <li>Directly use <code>String</code></li>
               <li>Custom <code>JsonObject</code> and <code>JsonArray</code></li>
 
-            <pre><code class="scala" data-trim data-noescape>
-              type Json = JsonObject | JsonArray | String
-            </code></pre>
-
-          </ul>
-
+              <pre><code class="scala" data-trim data-noescape>
+                type Json = JsonObject | JsonArray | String
+              </code></pre>
+            </ul>
           </section>
 
           <section>
@@ -195,13 +194,14 @@
               <li>Uses <code>scala.Selectable</code></li>
             </ul>
 
-            <pre><code class="scala" data-trim data-noescape data-line-numbers="1-3|4-7">
+            <pre><code class="scala" data-trim data-noescape data-line-numbers="1-3|4-8">
               import scala.language.dynamics
 
               class JsonObject(nameValues: Map[String, Json]) extends scala.Selectable:
-                def selectDynamic(name: String): Json | Undefined.type =
+                def selectDynamic(name: String): Json | Undefined =
                   nameValues.getOrElse(name, Undefined)
 
+              type Undefined = Undefined.type
               object Undefined
             </code></pre>
           </section>
@@ -345,9 +345,7 @@
             </code></pre>
 
             <ul>
-              <li>Top level code splice to evaluate <code>jsonExpr</code> at compile-time</li>
-              <li>Quoted arguments to pass them as code expressions <code>Expr[T]</code></li>
-              <li>Need a <code>Quotes</code> quotation context</li>
+              <li><code>'sc</code> is a shorthand for <code>'{sc}</code></li>
             </ul>
           </section>
 
@@ -464,8 +462,16 @@
               <li>Use <code>valueOrAbort</code> to get the value using <code>FromExpr[StringContext]</code></li>
               <ul>
                 <li>Use <code>value</code> to get an <code>Option[StringContext]</code></li>
+                <li>Use <code>Expr(v)</code> in pattern position</li>
               </ul>
             </ul>
+            <pre data-id="example1"><code class="scala" data-trim data-noescape data-line-numbers="">
+              scExpr = '{ StringContext(" [ ", ", ", "] ") }
+            </code></pre>
+            <div>↓</div>
+            <pre data-id="example2"><code class="scala" data-trim data-noescape data-line-numbers="" data-ln-start-from="2">
+              sc = StringContext(" [ ", ", ", "] ")
+            </code></pre>
           </section>
           <section data-auto-animate>
             <h3>Parsing the <code>StringContext</code></h3>
@@ -478,6 +484,13 @@
             <ul>
               <li>Get the string parts of the interpolator</li>
             </ul>
+            <pre data-id="example2"><code class="scala" data-trim data-noescape data-line-numbers="" data-ln-start-from="2">
+              sc = StringContext(" [ ", ", ", "] ")
+            </code></pre>
+            <div>↓</div>
+            <pre data-id="example3"><code class="scala" data-trim data-noescape data-line-numbers="" data-ln-start-from="3">
+              parts = Seq(" [ ", ", ", "] ")
+            </code></pre>
           </section>
           <section data-auto-animate>
             <h3>Parsing the <code>StringContext</code></h3>
@@ -769,20 +782,24 @@
             </code></pre>
           </section>
 
-          <section data-auto-animate>
-            <h3><span data-id="stringContextJsonExampleTitle">Macro implementation</h3>
-            <pre data-id="jsonExpr" style="width: 85%;"><code class="scala" data-trim data-noescape data-line-numbers>
-              def jsonExpr(scExpr: Expr[StringContext],
-                           argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
-                val jsonPattern: Pattern = parsed(scExpr)
-                val Varargs(argExprs) = argsExpr
-                toJsonExpr(jsonPattern, argExprs)
+
+          <section data-auto-animate class="dark-slide" data-background-color="var(--r-background-color-dark-slide)">
+            <h3 style="padding-bottom: 0px;">Multi-stage programming</h3>
+            <h3>pattern matching</h3>
+            <pre data-id="nameOf"><code class="scala" data-trim data-line-numbers>
+              def nameOf(nameExpr: Expr[String])(using Quotes): Expr[String] =
+                nameExpr match
+                  case '{ "Hello" } => Expr("No name")
+                  ...
             </code></pre>
+            <ul>
+              <li><code>case '{ expr }</code> matches the expression</li>
+            </ul>
           </section>
           <section data-auto-animate class="dark-slide" data-background-color="var(--r-background-color-dark-slide)">
             <h3 style="padding-bottom: 0px;">Multi-stage programming</h3>
             <h3>pattern matching</h3>
-            <pre data-id="helloExpr"><code class="scala" data-trim data-line-numbers>
+            <pre data-id="nameOf"><code class="scala" data-trim data-line-numbers>
               def nameOf(nameExpr: Expr[String])(using Quotes): Expr[String] =
                 nameExpr match
                   case '{ "Hello" } => Expr("No name")
@@ -794,6 +811,16 @@
               <li><code>$name</code> extracts a sub-expression</li>
               <li><code>$name:T</code> extracts a sub-expression of type <code>T</code></li>
             </ul>
+          </section>
+          <section data-auto-animate>
+            <h3><span data-id="stringContextJsonExampleTitle">Macro implementation</h3>
+            <pre data-id="jsonExpr" style="width: 85%;"><code class="scala" data-trim data-noescape data-line-numbers>
+              def jsonExpr(scExpr: Expr[StringContext],
+                           argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
+                val jsonPattern: Pattern = parsed(scExpr)
+                val Varargs(argExprs) = argsExpr
+                toJsonExpr(jsonPattern, argExprs)
+            </code></pre>
           </section>
           <section data-auto-animate>
             <h3 data-id="stringContextJsonExampleTitle">Macro implementation V2</h3>
@@ -987,7 +1014,7 @@
           </section>
 
           <section class="dark-slide" data-background-color="var(--r-background-color-dark-slide)">
-            <h3>Refinement types and <code>scala.Selectable</code></h3>
+            <h3><code>scala.Selectable</code> and refinement types</h3>
 
             <pre style="width:70%"><code class="scala" data-trim data-noescape data-line-numbers="1">
               class JsonObject(...) extends scala.Selectable:
