@@ -141,7 +141,7 @@
                 <li class="fragment">Use transparent macro and type refinements</li>
                 <li class="fragment">Precise error reporting on string interpolators</li>
               </ol>
-              <li class="fragment" style="list-style-type: none">GitHub project (link + QR at the end)</li>
+              <li class="fragment" style="list-style-type: none">GitHub project (link + QR in last slide)</li>
             </ul>
           </section>
 
@@ -255,7 +255,7 @@
             <h3>Multi-stage programming</h3>
             <pre data-id="helloExpr"><code class="scala" data-trim data-line-numbers="1">
               def helloExpr(nameExpr: Expr[String])(using Quotes): Expr[String] =
-                val hello = '{ "Hello" }
+                val hello: Expr[String] = '{ "Hello" }
                 val helloName: Expr[String] = '{ ${hello} + " " + ${nameExpr}  }
                 helloName // '{ "Hello" + " " + name  }
             </code></pre>
@@ -267,7 +267,7 @@
             <h3>Multi-stage programming</h3>
             <pre data-id="helloExpr"><code class="scala" data-trim data-line-numbers="2">
               def helloExpr(nameExpr: Expr[String])(using Quotes): Expr[String] =
-                val hello = '{ "Hello" }
+                val hello: Expr[String] = '{ "Hello" }
                 val helloName: Expr[String] = '{ ${hello} + " " + ${nameExpr}  }
                 helloName // '{ "Hello" + " " + name  }
             </code></pre>
@@ -280,7 +280,7 @@
             <h3>Multi-stage programming</h3>
             <pre data-id="helloExpr"><code class="scala" data-trim data-line-numbers="3-4">
               def helloExpr(nameExpr: Expr[String])(using Quotes): Expr[String] =
-                val hello = '{ "Hello" }
+                val hello: Expr[String] = '{ "Hello" }
                 val helloName: Expr[String] = '{ ${hello} + " " + ${nameExpr}  }
                 helloName // '{ "Hello" + " " + name  }
             </code></pre>
@@ -294,7 +294,7 @@
             <h3>Multi-stage programming</h3>
             <pre data-id="helloExpr"><code class="scala" data-trim data-line-numbers="2">
               def helloExpr(nameExpr: Expr[String])(using Quotes): Expr[String] =
-                val hello = Expr("Hello") // '{ "Hello" }
+                val hello: Expr[String] = Expr("Hello") // '{ "Hello" }
                 val helloName: Expr[String] = '{ ${hello} + " " + ${nameExpr}  }
                 helloName // '{ "Hello" + " " + name  }
             </code></pre>
@@ -312,7 +312,7 @@
                 ...
 
               inline def hello(name: String): String =
-                ${ helloExpr('name) }
+                ${ helloExpr('{name}) }
             </code></pre>
             <ul>
               <li><code>${ expr }</code>: Evaluates <code>expr</code> now and insert the code</li>
@@ -683,7 +683,7 @@
 
         <section class="no-water-mark">
           <section class="red-slide" data-background-color="var(--r-background-color-red-slide)">
-            <h2>String interpolator macro</h2>
+            <h2>String interpolator extractor macro</h2>
             <pre><code class="scala" data-trim data-noescape data-line-numbers>
               talk match
                 case <span class="hljs-string">json</span>&#8203""<span hidden> </span>" { "name": $name, "speaker": $speaker } """ =>
@@ -979,18 +979,6 @@
               <li>Combined with this <code>ToExpr[Pattern]</code>, and <code>ToExpr[String]</code></li>
             </ul>
           </section>
-          <section data-auto-animate>
-            <h3>Lifting a <code>Pattern</code></h3>
-            <pre data-id="ToExpr" style="width: 80%;"><code class="scala" data-trim data-noescape data-line-numbers>
-              given ToExpr[Pattern] with
-                def apply(pattern: Pattern)(using Quotes): Expr[Pattern] =
-                  pattern match
-                    case Pattern.InterpolatedValue => '{ Pattern.InterpolatedValue }
-                    case Pattern.Str(value) => '{ Pattern.Str(${Expr(value)}) }
-                    case Pattern.Arr(patterns*) => '{ Pattern.Arr(${Expr(patterns)}*) }
-                    case Pattern.Obj(namePatterns*) => '{ Pattern.Obj(${Expr(namePatterns)}*) }
-            </code></pre>
-          </section>
           <section class="red-slide" data-background-color="var(--r-background-color-red-slide)">
             <h4>Now we know how to<h4>
             <h4>define string interpolator extractor macros</h4>
@@ -1139,6 +1127,7 @@
             <ul>
               <li><code>case '[T] =></code> : Matches the type type <code>T</code></li>
               <li><code>t</code> is type variable (lower-case type name)</li>
+              <li><code>Type[t]</code> is implicitly given be the pattern</li>
             </ul>
           </section>
 
