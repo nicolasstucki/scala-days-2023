@@ -961,7 +961,7 @@
                     ...
             </code></pre>
             <ul>
-              <li>Use <code>ToExpr[Boolean]</code>, <code>ToExpr[Double]</code>, and <code>ToExpr[String]</code></li>
+              <li>Use <code>ToExpr[String]</code> for <code>Expr(value)</code></li>
             </ul>
           </section>
           <section data-auto-animate>
@@ -1072,8 +1072,8 @@
                 val '{ ($scExpr: StringContext).json } = jsonSCExpr
                 val jsonPattern: Pattern = parsed(scExpr)
                 val Varargs(argExprs) = argsExpr
-                val jsonExpr: Expr[Json] = toJsonExpr(jsonPattern, argExprs)
-                jsonExpr
+                val expr: Expr[Json] = toJsonExpr(jsonPattern, argExprs)
+                expr
             </code></pre>
             <ul>
               <li>Can refines result into <code>String</code>, <code>JsonArray</code>, or <code>JsonObject</code></li>
@@ -1087,9 +1087,9 @@
                 val '{ ($scExpr: StringContext).json } = jsonSCExpr
                 val jsonPattern: Pattern = parsed(scExpr)
                 val Varargs(argExprs) = argsExpr
-                val jsonExpr: Expr[Json] = toJsonExpr(jsonPattern, argExprs)
+                val expr: Expr[Json] = toJsonExpr(jsonPattern, argExprs)
                 val refinedJsonType: Type[?] = refinedType(jsonPattern, argExprs)
-                jsonExpr
+                expr
             </code></pre>
             <ul>
               <li>Refinements of <code>JsonObject { val name: ... }</code></li>
@@ -1140,10 +1140,10 @@
                 val '{ ($scExpr: StringContext).json } = jsonSCExpr
                 val jsonPattern: Pattern = parsed(scExpr)
                 val Varargs(argExprs) = argsExpr
-                val jsonExpr: Expr[Json] = toJsonExpr(jsonPattern, argExprs)
+                val expr: Expr[Json] = toJsonExpr(jsonPattern, argExprs)
                 val refinedJsonType: Type[?] = refinedType(jsonPattern, argExprs)
                 refinedJsonType match
-                  case '[t] => '{ $jsonExpr.asInstanceOf[t] }.asExprOf[Json]
+                  case '[t] => '{ $expr.asInstanceOf[t] }.asExprOf[Json]
             </code></pre>
             <ul>
               <li>Give the name <code>t</code> to the refined type</li>
