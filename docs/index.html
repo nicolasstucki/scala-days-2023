@@ -1066,14 +1066,13 @@
 
           <section data-auto-animate>
             <h3>Macro implementation V2</h3>
-            <pre style="width:74%" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="7">
+            <pre style="width:74%" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="6">
               def jsonExpr(jsonSCExpr: Expr[JsonStringContext],
                            argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
                 val '{ ($scExpr: StringContext).json } = jsonSCExpr
                 val jsonPattern: Pattern = parsed(scExpr)
                 val Varargs(argExprs) = argsExpr
-                val expr: Expr[Json] = toJsonExpr(jsonPattern, argExprs)
-                expr
+                toJsonExpr(jsonPattern, argExprs)
             </code></pre>
             <ul>
               <li>Can refines result into <code>String</code>, <code>JsonArray</code>, or <code>JsonObject</code></li>
@@ -1081,15 +1080,14 @@
           </section>
           <section data-auto-animate>
             <h3>Macro implementation V3</h3>
-            <pre style="width:74%" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="7-8">
+            <pre style="width:74%" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="6">
               def jsonExpr(jsonSCExpr: Expr[JsonStringContext],
                            argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
                 val '{ ($scExpr: StringContext).json } = jsonSCExpr
                 val jsonPattern: Pattern = parsed(scExpr)
                 val Varargs(argExprs) = argsExpr
-                val expr: Expr[Json] = toJsonExpr(jsonPattern, argExprs)
                 val refinedJsonType: Type[?] = refinedType(jsonPattern, argExprs)
-                expr
+                toJsonExpr(jsonPattern, argExprs)
             </code></pre>
             <ul>
               <li>Refinements of <code>JsonObject { val name: ... }</code></li>
@@ -1134,14 +1132,14 @@
 
           <section data-auto-animate>
             <h3>Macro implementation V3</h3>
-            <pre style="width:74%" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="7-10">
+            <pre style="width:74%" data-id="jsonExpr"><code class="scala" data-trim data-noescape data-line-numbers="6-9">
               def jsonExpr(jsonSCExpr: Expr[JsonStringContext],
                            argsExpr: Expr[Seq[Json]])(using Quotes): Expr[Json] =
                 val '{ ($scExpr: StringContext).json } = jsonSCExpr
                 val jsonPattern: Pattern = parsed(scExpr)
                 val Varargs(argExprs) = argsExpr
-                val expr: Expr[Json] = toJsonExpr(jsonPattern, argExprs)
                 val refinedJsonType: Type[?] = refinedType(jsonPattern, argExprs)
+                val expr: Expr[Json] = toJsonExpr(jsonPattern, argExprs)
                 refinedJsonType match
                   case '[t] => '{ $expr.asInstanceOf[t] }.asExprOf[Json]
             </code></pre>
