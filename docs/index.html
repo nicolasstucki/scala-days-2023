@@ -323,20 +323,21 @@
           <section data-auto-animate>
             <h3>Macro definition</h3>
             <pre data-id="jsonExpr" style="width: 89%;"><code class="scala" data-trim data-noescape data-line-numbers>
-              extension (sc: StringContext)
+              extension (inline sc: StringContext)
                 inline def json(inline args: Json*): Json =
                   ...
             </code></pre>
 
             <ul>
               <li>Macro defined as extension inline method</li>
+              <li>Use inline <code>StringContext</code> to avoid its instantiation</li>
               <li>Use inline arguments to elide the creation of a sequence</li>
             </ul>
           </section>
           <section data-auto-animate>
             <h3>Macro definition</h3>
             <pre data-id="jsonExpr" style="width: 89%;"><code class="scala" data-trim data-noescape data-line-numbers>
-              extension (sc: StringContext)
+              extension (inline sc: StringContext)
                 inline def json(inline args: Json*): Json =
                   ${ jsonExpr('sc, 'args) }
 
