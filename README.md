@@ -3,6 +3,7 @@
 
 ### Scala Days Presentation
 
+* Talk: https://www.youtube.com/watch?v=dKblZynnhgo
 * Slides: https://nicolasstucki.github.io/scala-days-2023/
 
 ### Usage
